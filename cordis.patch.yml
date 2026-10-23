@@ -1,0 +1,40 @@
+# dsh bundle layer: 技能描述中文化。
+# 七个 office 技能用 global provider（rank 50）覆盖，四个 agent-preset 技能
+# 用项目级影子目录（<project>/.dsh/skills/<name>）覆盖；
+# runtime 技能（browser-skill）在 agent 层注册同名 provider（rank 50 < 250）覆盖；
+# 斜杠命令描述在每个 agent 的 scope 层注册同名命令影子（全局永远英文）。
+- insert:
+    - id: skill-desc-zh
+      name: dsh-skill-desc-zh
+      config:
+        enabled: true
+        engine: auto
+        translatePreset: true
+        restoreOnQuit: false
+        projectAllowlist:
+          # e2e 工作区（/Applications/dsh）不在 $HOME 下，显式放行；
+          # 其余项目默认只有位于 $HOME 内才会写入项目级影子。
+          - /Applications/dsh
+        llm:
+          provider: null
+          model: null
+          timeoutMs: 30000
+        targets:
+          global:
+            - office
+            - office-docx
+            - office-export-pdf
+            - office-pptx
+            - office-recalculate
+            - office-render
+            - office-xlsx
+            - browser-skill
+          preset:
+            - agent-experience
+            - cordis-composition-reference
+            - cordis-plugin-development
+            - editing-cordis-compositions
+          commands:
+            - acp
+            - acp-cache
+            - agent-teams

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Skill descriptions in Chinese">
+  <defs>
+    <linearGradient id="g" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5b8def"/>
+      <stop offset="1" stop-color="#7c5cff"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="15" fill="url(#g)"/>
+  <path d="M20 20h15c5 0 9 4 9 9v15" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+  <path d="M20 32h11" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="44" cy="20" r="6" fill="#fff"/>
+  <circle cx="20" cy="44" r="6" fill="#fff"/>
+  <path d="M26 44h7c6 0 11-5 11-11v-7" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

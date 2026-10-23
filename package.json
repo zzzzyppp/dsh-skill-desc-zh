@@ -1,0 +1,61 @@
+{
+  "name": "dsh-skill-desc-zh",
+  "version": "0.6.0",
+  "private": true,
+  "description": "把 DSH 技能与斜杠命令描述自动翻译为中文，并在设置页管理技能与第三方插件（技能 CRUD、禁用、回收站、检查更新）",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client.js",
+    "./icon.svg": "./icon.svg",
+    "./icon": "./icon.svg",
+    "./locale/*.json": "./locale/*.json",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "client.js",
+    "locale",
+    "icon.svg"
+  ],
+  "engines": {
+    "dsh": ">=0.2.1-rc.2"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true
+    }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "e2e:agent-layer": "ELECTRON_RUN_AS_NODE=1 \"/Applications/DeepSeek Harness.app/Contents/MacOS/DeepSeek Harness\" scripts/agent-layer-e2e.mjs",
+    "e2e:commands": "ELECTRON_RUN_AS_NODE=1 \"/Applications/DeepSeek Harness.app/Contents/MacOS/DeepSeek Harness\" scripts/commands-e2e.mjs",
+    "check:client": "node scripts/check-client.mjs",
+    "e2e:plugin-admin": "node scripts/plugin-admin-e2e.mjs",
+    "e2e:skills": "node scripts/skills-e2e.mjs"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "skill",
+    "i18n",
+    "chinese"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zzzzyppp/dsh-skill-desc-zh.git"
+  },
+  "homepage": "https://github.com/zzzzyppp/dsh-skill-desc-zh#readme",
+  "bugs": {
+    "url": "https://github.com/zzzzyppp/dsh-skill-desc-zh/issues"
+  }
+}

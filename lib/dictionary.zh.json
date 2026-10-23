@@ -1,0 +1,17 @@
+{
+  "Create, edit, inspect, or convert Office documents, spreadsheets, presentations, and PDFs. Load to choose the relevant workflow.": "创建、编辑、检查或转换 Office 文档、电子表格、演示文稿与 PDF。加载本技能以选择合适的工作流。",
+  "Create, read, edit, and validate Word documents (.docx).": "创建、读取、编辑并校验 Word 文档（.docx）。",
+  "Convert an Office document to a requested PDF with LibreOffice Kit.": "用 LibreOffice Kit 把 Office 文档转换为指定 PDF。",
+  "Create, read, edit, and validate PowerPoint presentations (.pptx).": "创建、读取、编辑并校验 PowerPoint 演示文稿（.pptx）。",
+  "Refresh spreadsheet formula caches and verify calculated values with LibreOffice Kit.": "用 LibreOffice Kit 刷新电子表格公式缓存并校验计算值。",
+  "Render requested document images or inspect visual layout with LibreOffice Kit.": "用 LibreOffice Kit 渲染所需的文档图片，或检查版面视觉效果。",
+  "Read, create, edit, and validate Excel workbooks, data, and formulas (.xlsx).": "读取、创建、编辑并校验 Excel 工作簿、数据与公式（.xlsx）。",
+  "Use when writing or changing a model-facing tool definition (name, description, parameter schema, or its system-prompt section), and when designing skills, context loading, or multi-step workflows, to make information discoverable and use context efficiently.": "编写或修改面向模型的工具定义（名称、描述、参数 schema 或其系统提示词片段）时使用；设计技能、上下文加载或多步工作流时也使用，目的是让信息可被发现并高效利用上下文。",
+  "Use when writing or reading a Cordis bundle patch or agent preset for this harness and you need the Loader YAML dialect (insert, override by id, group, disabled, isolate, !!js) or the list of installable Harness plugin packages and what each provides.": "编写或阅读本 harness 的 Cordis bundle patch、agent preset 时使用；需要 Loader YAML 方言（insert、按 id override、group、disabled、isolate、!!js）或可安装 Harness 插件包清单及其功能说明时使用。",
+  "Use when designing, reviewing, adding, enabling, disabling, installing, configuring, or debugging a plugin, bundle, feature, page, panel, tool, or MCP connection in the current Harness profile, including a shipped plugin that is disabled by default, and for any visual object, decoration, or widget request that names no other destination, which means an installed UI plugin rendered in the Harness Web UI.": "在当前 Harness profile 中设计、审查、添加、启用、禁用、安装、配置或调试插件、bundle、功能、页面、面板、工具或 MCP 连接时使用，包括默认禁用的随附插件；当视觉对象、装饰或小组件请求未指定其他落点时也使用（即渲染在 Harness Web UI 里的已安装 UI 插件）。",
+  "Use when creating, changing, or validating an agent preset or other Cordis composition for this harness, including deciding host versus preset placement and checking that an authored preset mounts.": "创建、修改或验证本 harness 的 agent preset 或其他 Cordis 组合时使用，包括判断放在 host 还是 preset，以及确认自建 preset 能否成功挂载。",
+  "Automate the user's logged-in Chromium through this plugin's injected bsk_* tools. Use to read pages, fill forms, operate tabs, inspect page activity, debug a website, or test a UI.": "通过本插件注入的 bsk_* 工具操作用户已登录的 Chromium：读取页面、填写表单、操作标签页、检查页面活动、调试网站或测试 UI。",
+  "Show bili context-compression status": "显示 bili 上下文压缩状态",
+  "Prompt-cache reconciliation (same report as the acp_cache tool)": "提示词缓存对账（与 acp_cache 工具同源同报）",
+  "run a goal with a multi-agent team (you become the captain)": "以多智能体团队运行目标（你将成为队长）"
+}

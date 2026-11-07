@@ -95,17 +95,6 @@ check('single settings slot', () => {
   return 'settings.section order 16 (single)'
 })
 
-check('settings icon slot', () => {
-  const injections = client.match(/ctx\.slots\.inject\('settings\.section\.icon'/gu) || []
-  if (injections.length !== 1) throw new Error(`expected exactly one settings.section.icon injection, got ${injections.length}`)
-  if (!/name:\s*'settings\.section\.icon'/u.test(client)) throw new Error('icon slot name missing')
-  if (!/id:\s*'skill-desc-zh'/u.test(client)) throw new Error('icon slot id must equal skill-desc-zh')
-  if (!/props\.active/u.test(client) || !/props\.size/u.test(client)) throw new Error('icon must follow active/size props')
-  if (!/--dsw-alias-brand-primary/u.test(client)) throw new Error('icon must use theme alias variables')
-  if (!client.includes("'译'")) throw new Error('icon must render 译')
-  return 'settings.section.icon id skill-desc-zh + active/size + 译'
-})
-
 check('tabs', () => {
   if (!/TAB_STORAGE_KEY\s*=\s*'dsh-skill-desc-zh\.activeTab'/u.test(client)) throw new Error('tab storage key missing')
   if (!/id:\s*'translate'[\s\S]*?id:\s*'plugins'[\s\S]*?id:\s*'skills'/u.test(client)) throw new Error('TABS ids missing')

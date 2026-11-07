@@ -114,14 +114,10 @@ test('client 注册：id、factory、注入与设置页 slot', () => {
   assert.equal(internals.PAGE_ORDER, 16)
   const env = makeCtx('zh')
   plugin.apply(env.ctx)
-  assert.deepEqual(env.calls.injected, ['settings.section', 'settings.section.icon'])
-  assert.equal(env.calls.slots.length, 2)
-  const iconEntry = env.calls.slots.find((entry) => entry.spec.name === 'settings.section.icon')
+  assert.deepEqual(env.calls.injected, ['settings.section'])
+  assert.equal(env.calls.slots.length, 1)
   const sectionEntry = env.calls.slots.find((entry) => entry.spec.name === 'settings.section')
-  assert.ok(iconEntry && sectionEntry)
-  const iconSpec = iconEntry.spec
-  assert.equal(iconSpec.id, 'skill-desc-zh')
-  assert.equal(iconEntry.Component.name, 'BetterSkillIconSlot')
+  assert.ok(sectionEntry)
   const { spec, Component } = sectionEntry
   assert.equal(spec.name, 'settings.section')
   assert.equal(spec.id, 'skill-desc-zh')

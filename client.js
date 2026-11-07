@@ -3350,32 +3350,29 @@
       }
 
       function apply(ctx) {
-        ctx.effect(function () {
-          return ctx.locale.register(NS, DICT);
-        }, 'skill-desc-zh: locale');
-        var t = ctx.locale.bind(NS);
-        ctx.effect(function () {
-          return installPluginMarketBridge(ctx);
-        }, 'skill-desc-zh: plugin-market events');
-        ctx.slots.inject('settings.section', function () {
-          return ctx.slots.register({
-            name: 'settings.section',
-            id: 'skill-desc-zh',
-            order: PAGE_ORDER,
-            label: function () { return t('nav'); },
-            locale: NS
-          }, function BetterSkillPanel(props) {
-            return h(BetterSkillPage, Object.assign({}, props, { t: props.t || t, ctx: ctx }));
+        try {
+          ctx.effect(function () {
+            return ctx.locale.register(NS, DICT);
+          }, 'skill-desc-zh: locale');
+          var t = ctx.locale.bind(NS);
+          ctx.effect(function () {
+            return installPluginMarketBridge(ctx);
+          }, 'skill-desc-zh: plugin-market events');
+          ctx.slots.inject('settings.section', function () {
+            return ctx.slots.register({
+              name: 'settings.section',
+              id: 'skill-desc-zh',
+              order: PAGE_ORDER,
+              label: function () { return t('nav'); },
+              locale: NS
+            }, function BetterSkillPanel(props) {
+              return h(BetterSkillPage, Object.assign({}, props, { t: props.t || t, ctx: ctx }));
+            });
           });
-        });
-        ctx.slots.inject('settings.section.icon', function () {
-          return ctx.slots.register({
-            name: 'settings.section.icon',
-            id: 'skill-desc-zh'
-          }, function BetterSkillIconSlot(props) {
-            return h(BetterSkillIcon, props);
-          });
-        });
+        } catch (error) {
+          try { console.error('skill-desc-zh: client activation failed', error && error.stack ? error.stack : error); } catch (ignored) {}
+          try { window.__SDZH_CLIENT_ERROR__ = String(error && error.stack ? error.stack : error); } catch (ignored) {}
+        }
       }
 
       module.exports = {

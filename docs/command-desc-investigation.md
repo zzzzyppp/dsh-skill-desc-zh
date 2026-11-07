@@ -1,4 +1,4 @@
-# 指令描述中文化独立复核：`/acp`、`/acp-cache`、`/agent-teams`
+# 指令描述汉化独立复核：`/acp`、`/acp-cache`、`/agent-teams`
 
 > 复核时间：2026-10-21 21:44 +08:00
 > 复核对象：desktop profile（`~/.dsh/profiles/desktop`），DSH desktop `0.2.1-rc.2`

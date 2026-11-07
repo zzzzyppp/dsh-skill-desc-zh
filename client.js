@@ -17,7 +17,7 @@
       var NS = 'skill-desc-zh';
       var API_BASE = '/plugins/skill-desc-zh';
       var PAGE_ORDER = 16;
-      var PAGE_VERSION = '0.6.0';
+      var PAGE_VERSION = '0.7.0';
       var ACTIONS = ['apply', 'restore', 'refresh', 'retranslate', 'doctor'];
       var TAB_STORAGE_KEY = 'dsh-skill-desc-zh.activeTab';
       var TABS = [
@@ -83,7 +83,7 @@
         "zh": {
           "nav": "Better Skill",
           "tabs.label": "功能区",
-          "title": "技能描述中文化",
+          "title": "描述汉化",
           "subtitle": "自动把技能与斜杠命令描述翻译为中文；还原时只删除本插件的影子与缓存，不改动原始技能。",
           "phase.booting": "启动中",
           "phase.active": "已启用",
@@ -100,7 +100,7 @@
           "summary.none": "无",
           "summary.engine": "翻译引擎",
           "summary.lastAction": "最近动作",
-          "toggle.label": "启用技能描述中文化",
+          "toggle.label": "启用描述汉化",
           "toggle.hint": "关闭会还原项目影子并让 provider 返回英文；再次开启会重新捕获、翻译并建立影子。",
           "toggle.on": "已启用",
           "toggle.off": "已还原",
@@ -208,7 +208,7 @@
           "error.unknown": "未知错误",
           "error.retry": "重试",
           "error.details": "详情",
-          "meta.title": "技能描述中文化",
+          "meta.title": "描述汉化",
           "meta.description": "在设置中管理技能与命令的中文描述。",
           "footer.hint": "设置页只展示状态与触发动作；所有文件改动由 Host 半执行，并记录到事件日志。",
           "footer.version": "设置页版本 {version}",
@@ -602,6 +602,64 @@
         DICT.en[SKILL_I18N[skillIndex][0]] = SKILL_I18N[skillIndex][2];
       }
 
+      /**
+       * v0.7.0 插件索引子页文案。单独成表，避免把技能管理的 80+ 条
+       * inline key 再摊进上面两个巨大对象；locale/*.json 与这里逐键对齐。
+       */
+      var INDEX_I18N = [
+        ['plugins.index.switch.label', '插件视图', 'Plugin view'],
+        ['plugins.index.switch.installed', '已安装', 'Installed'],
+        ['plugins.index.switch.index', '插件索引', 'Plugin index'],
+        ['plugins.index.title', '插件索引', 'Plugin index'],
+        ['plugins.index.subtitle', '只读浏览宿主「设置 → 插件 → 发现」里已配置的索引源；安装与源管理仍在原生页进行。', 'Browse the index sources configured under Settings → Plugins → Discover. Read-only; installation and source management stay in the native page.'],
+        ['plugins.index.sources.label', '索引源', 'Index source'],
+        ['plugins.index.sources.empty', '尚未配置插件索引源，请在 设置 → 插件 → 发现 中添加。', 'No plugin index source configured. Add one under Settings → Plugins → Discover.'],
+        ['plugins.index.sources.refresh', '刷新索引', 'Refresh index'],
+        ['plugins.index.sources.errorReason', '不可用：{message}', 'Unavailable: {message}'],
+        ['plugins.index.search.label', '搜索插件', 'Search plugins'],
+        ['plugins.index.search.placeholder', '按名称、描述或关键词搜索', 'Search by name, description, or keyword'],
+        ['plugins.index.loading', '正在加载插件索引…', 'Loading plugin index…'],
+        ['plugins.index.loadMore', '加载更多', 'Load more'],
+        ['plugins.index.empty', '没有匹配的插件。', 'No matching plugins.'],
+        ['plugins.index.total', '共 {count} 个', '{count} total'],
+        ['plugins.index.status.label', '安装状态', 'Install status'],
+        ['plugins.index.status.not-installed', '未安装', 'Not installed'],
+        ['plugins.index.status.installed', '已安装', 'Installed'],
+        ['plugins.index.status.update-available', '可更新', 'Update available'],
+        ['plugins.index.status.different-version', '其他版本', 'Different version'],
+        ['plugins.index.status.provided', '宿主提供', 'Provided by host'],
+        ['plugins.index.compat.ok', '兼容当前宿主', 'Compatible'],
+        ['plugins.index.compat.incompatible', '不兼容（宿主 {version}）', 'Incompatible (host {version})'],
+        ['plugins.index.compat.exempted', '已豁免', 'Exempted'],
+        ['plugins.index.detail.author', '作者', 'Author'],
+        ['plugins.index.detail.homepage', '主页', 'Homepage'],
+        ['plugins.index.detail.repository', '仓库', 'Repository'],
+        ['plugins.index.detail.categories', '分类', 'Categories'],
+        ['plugins.index.detail.labels', '标签', 'Labels'],
+        ['plugins.index.detail.versions', '全部版本', 'All versions'],
+        ['plugins.index.detail.defaultVersion', '默认版本', 'Default version'],
+        ['plugins.index.detail.installedVersion', '已安装版本', 'Installed version'],
+        ['plugins.index.detail.installSpec', '安装目标', 'Install spec'],
+        ['plugins.index.detail.registry', 'Registry', 'Registry'],
+        ['plugins.index.detail.installHint', '安装请在「设置 → 插件 → 发现」的插件页执行；本页只读。', 'Install from the native plugin page under Settings → Plugins → Discover; this view is read-only.'],
+        ['plugins.index.detail.noVersions', '索引未提供版本信息。', 'No version information provided.'],
+        ['plugins.index.detail.show', '详情', 'Details'],
+        ['plugins.index.detail.hide', '收起', 'Hide'],
+        ['plugins.index.version.recommended', '推荐', 'Recommended'],
+        ['plugins.index.version.prerelease', '预发布', 'Pre-release'],
+        ['plugins.index.version.installed', '已安装', 'Installed'],
+        ['plugins.index.version.incompatible', '不兼容', 'Incompatible'],
+        ['plugins.index.version.exempted', '已豁免', 'Exempted'],
+        ['plugins.index.error.sources', '索引源加载失败', 'Failed to load index sources'],
+        ['plugins.index.error.search', '搜索失败', 'Search failed'],
+        ['plugins.index.error.retry', '重试', 'Retry'],
+        ['plugins.index.unavailable', '当前宿主未提供插件索引服务（需启用 DSH 插件发现）。', 'Plugin index service is unavailable (enable DSH plugin discovery).']
+      ];
+      for (var indexKey = 0; indexKey < INDEX_I18N.length; indexKey += 1) {
+        DICT.zh[INDEX_I18N[indexKey][0]] = INDEX_I18N[indexKey][1];
+        DICT.en[INDEX_I18N[indexKey][0]] = INDEX_I18N[indexKey][2];
+      }
+
       function translate(locale, key, params) {
         var dict = DICT[locale] || DICT.zh;
         var template = dict[key];
@@ -940,6 +998,46 @@
         '.sdzh-plugin-meta{color:var(--dsw-alias-label-secondary);font-size:12px;margin-top:3px;overflow-wrap:anywhere}',
         '.sdzh-plugin-action{display:flex;gap:8px;align-items:center;flex:none}',
         '.sdzh-plugin-version{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;font-weight:500}',
+        '.sdzh-index-switch{display:inline-flex;align-self:flex-start;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md,8px);overflow:hidden;background:var(--dsw-alias-bg-layer-2)}',
+        '.sdzh-index-switch button{appearance:none;border:0;border-right:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-secondary);padding:6px 13px;font:inherit;font-size:12.5px;cursor:pointer;min-height:30px}',
+        '.sdzh-index-switch button:last-child{border-right:0}',
+        '.sdzh-index-switch button[aria-pressed="true"]{background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-brand-primary);font-weight:600}',
+        '.sdzh-index-switch button:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}',
+        '.sdzh-index-toolbar{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:10px}',
+        '.sdzh-index-source{display:flex;flex-direction:column;gap:4px;min-width:min(280px,100%);flex:1 1 260px}',
+        '.sdzh-index-source span,.sdzh-index-search span{font-size:11.5px}',
+        '.sdzh-index-search{display:flex;flex-direction:column;gap:4px;margin:2px 0 8px}',
+        '.sdzh-input,.sdzh-select{font:inherit;font-size:12.5px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md,8px);padding:6px 9px;min-height:30px}',
+        '.sdzh-input{width:100%}',
+        '.sdzh-input:focus-visible,.sdzh-select:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px}',
+        '.sdzh-index-status{color:var(--dsw-alias-label-secondary);font-size:11.5px;margin-bottom:8px}',
+        '.sdzh-index-list{display:flex;flex-direction:column;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md,8px);overflow:hidden}',
+        '.sdzh-index-row{border-bottom:1px solid var(--dsw-alias-border-l2);min-width:0}',
+        '.sdzh-index-row:last-child{border-bottom:0}',
+        '.sdzh-index-main{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;min-width:0}',
+        '.sdzh-index-icon{width:36px;height:36px;border-radius:var(--dsw-radius-md,8px);flex:none;object-fit:cover;background:var(--dsw-alias-bg-layer-3)}',
+        '.sdzh-index-icon-fallback{display:inline-flex;align-items:center;justify-content:center;color:var(--dsw-alias-label-secondary);font-weight:700;font-size:16px}',
+        '.sdzh-index-copy{min-width:0;flex:1 1 auto}',
+        '.sdzh-index-title{font-weight:600;font-size:13px;overflow-wrap:anywhere}',
+        '.sdzh-index-name code,.sdzh-index-meta code{font-size:11px;overflow-wrap:anywhere;word-break:break-all}',
+        '.sdzh-index-desc{color:var(--dsw-alias-label-secondary);font-size:12px;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}',
+        '.sdzh-index-meta{display:flex;gap:7px 12px;align-items:center;flex-wrap:wrap;color:var(--dsw-alias-label-secondary);font-size:11.5px;margin-top:4px}',
+        '.sdzh-index-compat{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:5px;font-size:11.5px}',
+        '.sdzh-index-toggle{flex:none;margin-left:auto}',
+        '.sdzh-index-detail{border-top:1px dashed var(--dsw-alias-border-l2);padding:10px 12px;background:var(--dsw-alias-bg-layer-2);display:flex;flex-direction:column;gap:7px;font-size:12px}',
+        '.sdzh-index-links{display:flex;gap:12px;flex-wrap:wrap;align-items:center}',
+        '.sdzh-index-links a{color:var(--dsw-alias-brand-primary)}',
+        '.sdzh-index-tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center}',
+        '.sdzh-index-tag{display:inline-flex;align-items:center;border:1px solid var(--dsw-alias-border-l2);border-radius:999px;padding:1px 8px;font-size:11px;color:var(--dsw-alias-label-secondary);white-space:nowrap}',
+        '.sdzh-index-tag-danger{color:var(--dsw-alias-state-danger-primary);border-color:color-mix(in srgb,var(--dsw-alias-state-danger-primary) 35%,transparent)}',
+        '.sdzh-index-versions ul{margin:4px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}',
+        '.sdzh-index-versions li{display:flex;gap:6px;align-items:center;flex-wrap:wrap}',
+        '.sdzh-index-hint{margin:2px 0 0}',
+        '.sdzh-index-more{display:flex;justify-content:center;padding-top:10px}',
+        '.sdzh-index-skeleton{display:flex;flex-direction:column;gap:8px;padding:4px 0}',
+        '.sdzh-index-skeleton-row{height:56px;border-radius:var(--dsw-radius-md,8px);background:linear-gradient(90deg,var(--dsw-alias-bg-layer-2),var(--dsw-alias-bg-layer-3),var(--dsw-alias-bg-layer-2));background-size:200% 100%;animation:sdzh-index-shimmer 1.2s ease-in-out infinite}',
+        '@keyframes sdzh-index-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}',
+        '@media(max-width:640px){.sdzh-index-main{padding:9px 10px}.sdzh-index-toggle{margin-left:0}.sdzh-index-toolbar{align-items:stretch}}',
         '@media(max-width:420px){.sdzh-summary{grid-template-columns:1fr}}'
       ].join('\n');
 
@@ -1184,6 +1282,672 @@
         return { phase: 'active', label: t('plugins.stateLatest') };
       }
 
+      function indexText(ctx, value) {
+        if (value === null || value === undefined) return '';
+        if (typeof value === 'string') return value;
+        if (ctx && ctx.locale && typeof ctx.locale.resolveText === 'function') {
+          try {
+            var resolved = ctx.locale.resolveText(value);
+            if (typeof resolved === 'string' && resolved && resolved !== '[object Object]') return resolved;
+          } catch (error) {
+            /* fall through to the localized object */
+          }
+        }
+        if (typeof value === 'object') {
+          if (Array.isArray(value)) return '';
+          if (typeof value.zh === 'string' && value.zh) return value.zh;
+          if (typeof value['zh-CN'] === 'string' && value['zh-CN']) return value['zh-CN'];
+          if (typeof value.en === 'string' && value.en) return value.en;
+          var keys = Object.keys(value);
+          for (var index = 0; index < keys.length; index += 1) {
+            if (typeof value[keys[index]] === 'string' && value[keys[index]]) return value[keys[index]];
+          }
+          return '';
+        }
+        return String(value);
+      }
+
+      function indexHostname(url) {
+        try {
+          return new URL(String(url)).hostname || String(url);
+        } catch (error) {
+          return String(url);
+        }
+      }
+
+      function indexHref(value) {
+        return typeof value === 'string' && /^https?:\/\//iu.test(value) ? value : '';
+      }
+
+      function indexSourceLabel(ctx, source) {
+        var title = indexText(ctx, source && source.title);
+        return title || indexHostname(source && source.url);
+      }
+
+      function indexVersionParts(value) {
+        var text = String(value || '').trim().replace(/^v/iu, '');
+        var plus = text.indexOf('+');
+        if (plus >= 0) text = text.slice(0, plus);
+        var dash = text.indexOf('-');
+        var main = (dash >= 0 ? text.slice(0, dash) : text).split('.').map(function (part) {
+          var number = parseInt(part, 10);
+          return Number.isFinite(number) ? number : 0;
+        });
+        while (main.length < 3) main.push(0);
+        return {
+          main: main.slice(0, 3),
+          prerelease: dash >= 0 ? text.slice(dash + 1).split('.') : []
+        };
+      }
+
+      function compareIndexVersions(left, right) {
+        var a = indexVersionParts(left);
+        var b = indexVersionParts(right);
+        for (var i = 0; i < 3; i += 1) {
+          if (a.main[i] !== b.main[i]) return a.main[i] < b.main[i] ? -1 : 1;
+        }
+        if (!a.prerelease.length && !b.prerelease.length) return 0;
+        if (!a.prerelease.length) return 1;
+        if (!b.prerelease.length) return -1;
+        var length = Math.max(a.prerelease.length, b.prerelease.length);
+        for (var j = 0; j < length; j += 1) {
+          var x = a.prerelease[j];
+          var y = b.prerelease[j];
+          if (x === undefined) return -1;
+          if (y === undefined) return 1;
+          var xNumber = /^\d+$/u.test(x);
+          var yNumber = /^\d+$/u.test(y);
+          if (xNumber && yNumber) {
+            var nx = parseInt(x, 10);
+            var ny = parseInt(y, 10);
+            if (nx !== ny) return nx < ny ? -1 : 1;
+            continue;
+          }
+          if (xNumber !== yNumber) return xNumber ? -1 : 1;
+          if (x !== y) return x < y ? -1 : 1;
+        }
+        return 0;
+      }
+
+      function sortIndexVersions(versions) {
+        return (Array.isArray(versions) ? versions.slice() : []).sort(function (left, right) {
+          return compareIndexVersions(right && right.version, left && left.version);
+        });
+      }
+
+      function indexEntryVersion(entry) {
+        var versions = Array.isArray(entry && entry.versions) ? entry.versions : [];
+        if (entry && entry.defaultVersion) {
+          var found = versions.find(function (item) { return item && item.version === entry.defaultVersion; });
+          if (found) return found;
+        }
+        return versions[0] || null;
+      }
+
+      function indexStatusInfo(entry, t) {
+        var status = entry && entry.installation && entry.installation.status
+          ? entry.installation.status
+          : 'not-installed';
+        var labels = {
+          'not-installed': ['plugins.index.status.not-installed', 'restored'],
+          installed: ['plugins.index.status.installed', 'active'],
+          'update-available': ['plugins.index.status.update-available', 'degraded'],
+          'different-version': ['plugins.index.status.different-version', 'booting'],
+          provided: ['plugins.index.status.provided', 'restored']
+        };
+        var item = labels[status] || labels['not-installed'];
+        return { status: status, label: t(item[0]), phase: item[1] };
+      }
+
+      function indexCompatInfo(entry, t) {
+        var version = indexEntryVersion(entry);
+        var compatibility = version && version.compatibility;
+        if (!compatibility) return null;
+        // 真实宿主形状：{compatible:false, exempted:true} 表示已豁免、可安装。
+        // 必须优先于 incompatible 分支，否则会误报「不兼容」。
+        if (compatibility.exempted === true) {
+          return { tone: 'warning', label: t('plugins.index.compat.exempted'), detail: '' };
+        }
+        if (compatibility.compatible === true) return null;
+        if (compatibility.compatible === false) {
+          var requirements = Array.isArray(compatibility.requirements)
+            ? compatibility.requirements.join(', ')
+            : '';
+          return {
+            tone: 'danger',
+            label: t('plugins.index.compat.incompatible', { version: compatibility.runtimeVersion || '?' }),
+            detail: requirements
+          };
+        }
+        return null;
+      }
+
+      function mergeIndexEntries(existing, next) {
+        var seen = Object.create(null);
+        var merged = [];
+        (Array.isArray(existing) ? existing : []).concat(Array.isArray(next) ? next : []).forEach(function (entry) {
+          var name = entry && entry.name;
+          if (!name || seen[name]) return;
+          seen[name] = true;
+          merged.push(entry);
+        });
+        return merged;
+      }
+
+      function indexSearchQuery(text, options) {
+        var opts = options || {};
+        var query = {
+          sort: { kind: 'index' },
+          offset: Number.isFinite(opts.offset) ? opts.offset : 0,
+          limit: 50
+        };
+        var term = typeof text === 'string' ? text.trim() : '';
+        if (term) query.text = term;
+        if (opts.fetchedAt) query.fetchedAt = opts.fetchedAt;
+        if (opts.refresh) query.refresh = true;
+        return query;
+      }
+
+      /* 插件索引事件桥：apply 的 ctx.effect 只注册一次，多个视图订阅同一份事件。 */
+      var INDEX_MARKET_LISTENERS = [];
+      function subscribePluginMarket(listener) {
+        if (typeof listener !== 'function') return function () {};
+        INDEX_MARKET_LISTENERS.push(listener);
+        return function () {
+          var index = INDEX_MARKET_LISTENERS.indexOf(listener);
+          if (index >= 0) INDEX_MARKET_LISTENERS.splice(index, 1);
+        };
+      }
+      function notifyPluginMarket(kind) {
+        INDEX_MARKET_LISTENERS.slice().forEach(function (listener) {
+          try { listener(kind); } catch (error) { /* 视图异常不能影响其它监听者 */ }
+        });
+      }
+      function installPluginMarketBridge(ctx) {
+        var remote = ctx && ctx.remote;
+        var market = remote && remote.pluginMarket;
+        if (!market) return function () {};
+        var disposers = [];
+        function add(disposer) {
+          if (typeof disposer === 'function') disposers.push(disposer);
+          else if (disposer && typeof disposer.dispose === 'function') disposers.push(function () { disposer.dispose(); });
+        }
+        if (typeof remote.$on === 'function') {
+          add(remote.$on('plugin-market/changed', function () { notifyPluginMarket('market'); }));
+          add(remote.$on('plugin-manager/changed', function () { notifyPluginMarket('manager'); }));
+        }
+        if (typeof ctx.on === 'function') {
+          add(ctx.on('connection/reset', function () { notifyPluginMarket('reset'); }));
+        }
+        return function () {
+          disposers.forEach(function (dispose) {
+            try { dispose(); } catch (error) { /* ignore */ }
+          });
+        };
+      }
+
+      function IndexIcon(props) {
+        var [failed, setFailed] = useState(false);
+        var src = props.src;
+        var safe = typeof src === 'string' && /^(https?:\/\/|data:image\/)/iu.test(src);
+        var initial = String(props.name || '?').slice(0, 1).toUpperCase();
+        if (!safe || failed) {
+          return h('span', { className: 'sdzh-index-icon sdzh-index-icon-fallback', 'aria-hidden': 'true' }, initial);
+        }
+        return h('img', {
+          className: 'sdzh-index-icon',
+          src: src,
+          alt: '',
+          referrerpolicy: 'no-referrer',
+          loading: 'lazy',
+          onError: function () { setFailed(true); }
+        });
+      }
+
+      function PluginIndexRow(props) {
+        var t = props.t;
+        var entry = props.entry || {};
+        var ctx = props.ctx;
+        var versions = sortIndexVersions(entry.versions);
+        var version = indexEntryVersion(entry);
+        var status = indexStatusInfo(entry, t);
+        var compatibility = indexCompatInfo(entry, t);
+        var title = indexText(ctx, entry.title) || entry.name || '';
+        var description = indexText(ctx, entry.description);
+        var author = indexText(ctx, entry.author);
+        var tags = indexEntryTags(ctx, entry, props.metadata);
+        var categories = tags.categories;
+        var labels = tags.labels;
+        var installedVersion = entry.installation && entry.installation.installedVersion;
+        var detailId = 'sdzh-index-detail-' + String(entry.name || 'entry').replace(/[^a-z0-9-]/giu, '-');
+        var open = props.expanded === true;
+        var spec = version && version.install ? version.install.spec : '';
+        var registry = version && version.install ? version.install.registry : '';
+        var homepage = indexHref(entry.homepage);
+        var repository = indexHref(entry.repository);
+        return h('div', { className: 'sdzh-index-row', 'data-name': entry.name || '' },
+          h('div', { className: 'sdzh-index-main' },
+            h(IndexIcon, { src: entry.icon, name: title }),
+            h('div', { className: 'sdzh-index-copy' },
+              h('div', { className: 'sdzh-index-title' }, title),
+              entry.name && entry.name !== title ? h('div', { className: 'sdzh-index-name' }, h('code', null, entry.name)) : null,
+              description ? h('div', { className: 'sdzh-index-desc', title: description }, description) : null,
+              h('div', { className: 'sdzh-index-meta' },
+                author ? h('span', null, t('plugins.index.detail.author') + ': ' + author) : null,
+                entry.defaultVersion ? h('span', null, 'v' + entry.defaultVersion) : null,
+                h(Badge, { phase: status.phase }, status.label)
+              ),
+              compatibility ? h('div', { className: 'sdzh-index-compat' },
+                h(Badge, { phase: compatibility.tone === 'danger' ? 'failed' : 'degraded' }, compatibility.label),
+                compatibility.detail ? h('span', { className: 'sdzh-muted' }, compatibility.detail) : null
+              ) : null
+            ),
+            h('button', {
+              type: 'button',
+              className: 'sdzh-button sdzh-index-toggle',
+              'aria-expanded': open ? 'true' : 'false',
+              'aria-controls': detailId,
+              onClick: function () { props.onToggle(open ? null : entry.name); }
+            }, open ? t('plugins.index.detail.hide') : t('plugins.index.detail.show'))
+          ),
+          open ? h('div', { className: 'sdzh-index-detail', id: detailId },
+            h('div', { className: 'sdzh-index-links' },
+              author ? h('span', null, h('strong', null, t('plugins.index.detail.author') + ': '), author) : null,
+              homepage ? h('a', { href: homepage, target: '_blank', rel: 'noreferrer' }, t('plugins.index.detail.homepage')) : null,
+              repository ? h('a', { href: repository, target: '_blank', rel: 'noreferrer' }, t('plugins.index.detail.repository')) : null
+            ),
+            h('div', { className: 'sdzh-index-meta' },
+              h('span', null, t('plugins.index.detail.defaultVersion') + ': ' + (entry.defaultVersion || '—')),
+              installedVersion ? h('span', null, t('plugins.index.detail.installedVersion') + ': v' + installedVersion) : null
+            ),
+            categories.length ? h('div', { className: 'sdzh-index-tags' },
+              h('strong', null, t('plugins.index.detail.categories') + ': '),
+              categories.map(function (item) { return h('span', { className: 'sdzh-index-tag', key: 'cat-' + item.id }, item.title); })
+            ) : null,
+            labels.length ? h('div', { className: 'sdzh-index-tags' },
+              h('strong', null, t('plugins.index.detail.labels') + ': '),
+              labels.map(function (item) { return h('span', { className: 'sdzh-index-tag', key: 'label-' + item.id }, item.title); })
+            ) : null,
+            versions.length ? h('div', { className: 'sdzh-index-versions' },
+              h('strong', null, t('plugins.index.detail.versions')),
+              h('ul', null, versions.map(function (item) {
+                var exempted = item.compatibility && item.compatibility.exempted === true;
+                var incompatible = item.compatibility && item.compatibility.compatible === false && !exempted;
+                return h('li', { key: 'v-' + item.version },
+                  h('code', null, item.version),
+                  item.version === entry.defaultVersion ? h('span', { className: 'sdzh-index-tag' }, t('plugins.index.version.recommended')) : null,
+                  /-/u.test(item.version) ? h('span', { className: 'sdzh-index-tag' }, t('plugins.index.version.prerelease')) : null,
+                  installedVersion === item.version ? h('span', { className: 'sdzh-index-tag' }, t('plugins.index.version.installed')) : null,
+                  incompatible ? h('span', { className: 'sdzh-index-tag sdzh-index-tag-danger' }, t('plugins.index.version.incompatible')) : null,
+                  item.compatibility && item.compatibility.exempted ? h('span', { className: 'sdzh-index-tag' }, t('plugins.index.version.exempted')) : null,
+                  incompatible && item.compatibility.runtimeVersion ? h('span', { className: 'sdzh-muted' }, ' · ' + t('plugins.index.compat.incompatible', { version: item.compatibility.runtimeVersion })) : null
+                );
+              }))
+            ) : h('div', { className: 'sdzh-muted' }, t('plugins.index.detail.noVersions')),
+            spec ? h('div', { className: 'sdzh-index-meta' }, h('strong', null, t('plugins.index.detail.installSpec') + ': '), h('code', null, spec)) : null,
+            registry ? h('div', { className: 'sdzh-index-meta' }, h('strong', null, t('plugins.index.detail.registry') + ': '), h('code', null, registry)) : null,
+            h('p', { className: 'sdzh-muted sdzh-index-hint' }, t('plugins.index.detail.installHint'))
+          ) : null
+        );
+      }
+
+      function indexEntryTags(ctx, entry, metadata) {
+        var entryMeta = entry && entry.metadata ? entry.metadata : {};
+        var indexMeta = metadata && typeof metadata === 'object' ? metadata : null;
+        var categories = [];
+        var labels = [];
+        var categoryId = typeof entryMeta.category === 'string' ? entryMeta.category : '';
+        if (indexMeta && indexMeta.categories && typeof indexMeta.categories === 'object' && !Array.isArray(indexMeta.categories)) {
+          if (categoryId) {
+            var declaration = indexMeta.categories[categoryId];
+            categories = indexTextList(ctx, { [categoryId]: declaration || {} });
+          }
+        } else {
+          categories = indexTextList(ctx, entryMeta.categories);
+        }
+        if (!categories.length && categoryId) {
+          categories = indexTextList(ctx, { [categoryId]: {} });
+        }
+        if (indexMeta && indexMeta.labels && typeof indexMeta.labels === 'object' && !Array.isArray(indexMeta.labels)) {
+          var selected = {};
+          (Array.isArray(entryMeta.labels) ? entryMeta.labels : []).forEach(function (id) {
+            selected[id] = indexMeta.labels[id];
+          });
+          labels = indexTextList(ctx, selected);
+        } else {
+          labels = indexTextList(ctx, entryMeta.labels);
+        }
+        return { categories: categories, labels: labels };
+      }
+
+      function indexTextList(ctx, value) {
+        var items = [];
+        function titleOf(candidate) {
+          if (typeof candidate === 'string') return indexText(ctx, candidate);
+          if (candidate && typeof candidate === 'object' && !Array.isArray(candidate)) return indexText(ctx, candidate);
+          return '';
+        }
+        function push(id, title, indexFallback) {
+          var hasId = id !== undefined && id !== null && String(id) !== '';
+          var label = titleOf(title);
+          // 缺失/非法 title 时回退 id；id 也缺失才丢弃，绝不产生 [object Object]。
+          if (!label && hasId) label = indexText(ctx, id);
+          if (!label) return;
+          if (!hasId) {
+            if (indexFallback === undefined) return;
+            id = indexFallback;
+          }
+          items.push({ id: String(id), title: label });
+        }
+        // 真实宿主的 MarketIndexMetadata.categories/labels 是 Record<string, MarketDeclaration>，
+        // MarketDeclaration = { title: LocalizedText }；键名是 id，title 才是展示文本。
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          Object.keys(value).forEach(function (id) {
+            var declaration = value[id];
+            push(id, declaration && typeof declaration === 'object' && declaration.title !== undefined
+              ? declaration.title
+              : declaration);
+          });
+          return items;
+        }
+        // defensive：兼容旧 fake / 旧索引源的数组形状（字符串或 {id,title}）。
+        if (Array.isArray(value)) {
+          value.forEach(function (item, index) {
+            if (item === null || item === undefined) return;
+            if (typeof item === 'object') {
+              var id = typeof item.id === 'string' && item.id
+                ? item.id
+                : (typeof item.name === 'string' && item.name ? item.name : undefined);
+              if (item.title === undefined && id === undefined) {
+                // 形如 {en:'E'} 的 LocalizedText 仍可作为标题；空对象直接丢弃。
+                var localized = indexText(ctx, item);
+                if (localized) push(undefined, item, index);
+                return;
+              }
+              push(id, item.title, index);
+            } else {
+              push(item, item);
+            }
+          });
+        }
+        return items;
+      }
+
+      /**
+       * 插件索引只读子视图。
+       * 业务逻辑全部走 ctx.remote.pluginMarket；组件本身不发起写请求。
+       */
+      function PluginIndexView(props) {
+        var t = typeof props.t === 'function'
+          ? props.t
+          : function (key, params) { return translate('zh', key, params); };
+        var ctx = props.ctx;
+        var market = ctx && ctx.remote && ctx.remote.pluginMarket;
+        var [sources, setSources] = useState([]);
+        var [sourceState, setSourceState] = useState(market ? 'loading' : 'unavailable');
+        var [sourceError, setSourceError] = useState(null);
+        var [url, setUrl] = useState('');
+        var [query, setQuery] = useState('');
+        var [result, setResult] = useState(null);
+        var [searchState, setSearchState] = useState('idle');
+        var [searchError, setSearchError] = useState(null);
+        var [expanded, setExpanded] = useState(null);
+        var [loadingMore, setLoadingMore] = useState(false);
+        var alive = useRef(true);
+        var sourceSeq = useRef(0);
+        var searchSeq = useRef(0);
+        var urlRef = useRef('');
+        var queryRef = useRef('');
+        var resultRef = useRef(null);
+        var lastSubmitted = useRef('');
+
+        function applyUrl(next) {
+          urlRef.current = next || '';
+          setUrl(next || '');
+        }
+
+        function applyResult(next) {
+          resultRef.current = next;
+          setResult(next);
+        }
+
+        function runSearch(target, options) {
+          if (!market || !target) return;
+          var opts = options || {};
+          var seq = searchSeq.current + 1;
+          searchSeq.current = seq;
+          lastSubmitted.current = queryRef.current;
+          var previous = resultRef.current;
+          if (opts.reset) {
+            setSearchState('loading');
+            setSearchError(null);
+          } else {
+            setLoadingMore(true);
+          }
+          var offset = opts.reset ? 0 : (previous && Number.isFinite(previous.nextOffset)
+            ? previous.nextOffset
+            : (previous && Array.isArray(previous.entries) ? previous.entries.length : 0));
+          var request = indexSearchQuery(queryRef.current, {
+            offset: offset,
+            fetchedAt: opts.reset ? '' : (previous && previous.fetchedAt),
+            refresh: opts.refresh === true
+          });
+          Promise.resolve().then(function () { return market.search(target, request); }).then(function (payload) {
+            if (!alive.current || seq !== searchSeq.current) return;
+            var entries = payload && Array.isArray(payload.entries) ? payload.entries : [];
+            var merged = mergeIndexEntries(opts.reset ? [] : (previous && previous.entries), entries);
+            applyResult(Object.assign({}, payload || {}, { entries: merged }));
+            setSearchState('ready');
+            setSearchError(null);
+            setLoadingMore(false);
+          }).catch(function (failure) {
+            if (!alive.current || seq !== searchSeq.current) return;
+            var message = failure && failure.message ? failure.message : String(failure || t('error.unknown'));
+            setSearchError(message);
+            setSearchState('error');
+            setLoadingMore(false);
+          });
+        }
+
+        function loadSources(reason) {
+          if (!market) {
+            setSourceState('unavailable');
+            return;
+          }
+          var seq = sourceSeq.current + 1;
+          sourceSeq.current = seq;
+          setSourceState('loading');
+          setSourceError(null);
+          Promise.resolve().then(function () { return market.listIndexes(); }).then(function (list) {
+            if (!alive.current || seq !== sourceSeq.current) return;
+            var nextSources = Array.isArray(list) ? list : [];
+            setSources(nextSources);
+            if (!nextSources.length) {
+              applyUrl('');
+              applyResult(null);
+              setSearchState('idle');
+              setSourceState('ready');
+              return;
+            }
+            var current = nextSources.find(function (source) { return source && source.url === urlRef.current; });
+            var usable = nextSources.find(function (source) { return source && !source.error; });
+            var chosen = current || usable || nextSources[0];
+            applyUrl(chosen && chosen.url);
+            setSourceState('ready');
+            if (chosen && chosen.error) {
+              applyResult(null);
+              setSearchError(indexText(ctx, chosen.error) || t('plugins.index.error.search'));
+              setSearchState('error');
+              return;
+            }
+            if (chosen) runSearch(chosen.url, { reset: true, refresh: reason === 'refresh' });
+          }).catch(function (failure) {
+            if (!alive.current || seq !== sourceSeq.current) return;
+            setSourceState('error');
+            setSourceError(failure && failure.message ? failure.message : String(failure || t('error.unknown')));
+          });
+        }
+
+        function chooseSource(next) {
+          if (!next || next === urlRef.current) return;
+          lastSubmitted.current = '';
+          applyUrl(next);
+          applyResult(null);
+          var source = sources.find(function (item) { return item && item.url === next; });
+          if (source && source.error) {
+            setSearchError(indexText(ctx, source.error) || t('plugins.index.error.search'));
+            setSearchState('error');
+            return;
+          }
+          runSearch(next, { reset: true });
+        }
+
+        useEffect(function () {
+          alive.current = true;
+          if (!market) {
+            setSourceState('unavailable');
+            return function () {};
+          }
+          void loadSources('mount');
+          var unsubscribe = subscribePluginMarket(function (kind) {
+            if (kind === 'manager') {
+              if (urlRef.current) runSearch(urlRef.current, { reset: true, refresh: true });
+              return;
+            }
+            void loadSources(kind === 'reset' ? 'reset' : 'market');
+          });
+          return function () {
+            alive.current = false;
+            sourceSeq.current += 1;
+            searchSeq.current += 1;
+            unsubscribe();
+          };
+        }, []);
+
+        useEffect(function () {
+          if (!urlRef.current) return;
+          if (query === lastSubmitted.current) return;
+          var timer = setTimeout(function () {
+            if (alive.current && urlRef.current) runSearch(urlRef.current, { reset: true });
+          }, 250);
+          return function () { clearTimeout(timer); };
+        }, [query, url]);
+
+        function refresh() {
+          if (!market) return;
+          void loadSources('refresh');
+        }
+
+        function retrySearch() {
+          if (!urlRef.current) return;
+          runSearch(urlRef.current, { reset: true, refresh: true });
+        }
+
+        if (!market) {
+          return h(Card, { title: t('plugins.index.title') },
+            h(Banner, { tone: 'warning' }, t('plugins.index.unavailable'))
+          );
+        }
+
+        if (sourceState === 'loading') {
+          return h(Card, { title: t('plugins.index.title') },
+            h(Spinner, { label: t('plugins.index.loading') })
+          );
+        }
+
+        if (sourceState === 'error') {
+          return h(Card, { title: t('plugins.index.title') },
+            h(Banner, { tone: 'danger' },
+              h('div', null,
+                h('strong', null, t('plugins.index.error.sources')),
+                h('div', { className: 'sdzh-muted' }, sourceError || '')
+              ),
+              h(Button, { onClick: refresh }, t('plugins.index.error.retry'))
+            )
+          );
+        }
+
+        if (!sources.length) {
+          return h(Card, { title: t('plugins.index.title') },
+            h('div', { className: 'sdzh-empty' }, t('plugins.index.sources.empty')),
+            h(Button, { onClick: refresh }, t('plugins.index.sources.refresh'))
+          );
+        }
+
+        var selected = sources.find(function (source) { return source && source.url === url; }) || null;
+        var entries = result && Array.isArray(result.entries) ? result.entries : [];
+        var total = result && Number.isFinite(result.total) ? result.total : entries.length;
+        var hasMore = Boolean(result && (result.nextOffset !== null && result.nextOffset !== undefined || entries.length < total));
+        var busy = searchState === 'loading' || loadingMore;
+        return h(Card, {
+          title: t('plugins.index.title'),
+          extra: result ? t('plugins.index.total', { count: total }) : null
+        },
+          h('div', { className: 'sdzh-index-toolbar' },
+            h('label', { className: 'sdzh-index-source' },
+              h('span', null, t('plugins.index.sources.label')),
+              h('select', {
+                className: 'sdzh-select',
+                value: url,
+                onChange: function (event) { chooseSource(event.target.value); }
+              }, sources.map(function (source) {
+                var label = indexSourceLabel(ctx, source);
+                var reason = source.error ? indexText(ctx, source.error) : '';
+                return h('option', {
+                  key: source.url,
+                  value: source.url,
+                  disabled: Boolean(source.error),
+                  title: reason || source.url
+                }, label + (source.error ? ' (' + t('plugins.index.sources.errorReason', { message: reason }) + ')' : ''));
+              }))
+            ),
+            h('button', { type: 'button', className: 'sdzh-button', onClick: refresh, disabled: busy }, t('plugins.index.sources.refresh'))
+          ),
+          selected && selected.error ? h(Banner, { tone: 'warning' }, t('plugins.index.sources.errorReason', { message: indexText(ctx, selected.error) })) : null,
+          h('label', { className: 'sdzh-index-search' },
+            h('span', { className: 'sdzh-muted' }, t('plugins.index.search.label')),
+            h('input', {
+              className: 'sdzh-input',
+              type: 'search',
+              value: query,
+              placeholder: t('plugins.index.search.placeholder'),
+              'aria-label': t('plugins.index.search.label'),
+              onChange: function (event) { queryRef.current = event.target.value; setQuery(event.target.value); }
+            })
+          ),
+          h('div', { className: 'sdzh-index-status', role: 'status', 'aria-live': 'polite', 'aria-busy': busy ? 'true' : 'false' },
+            busy ? t('plugins.index.loading') : t('plugins.index.total', { count: total })
+          ),
+          searchError ? h(Banner, { tone: 'danger' },
+            h('div', null,
+              h('strong', null, t('plugins.index.error.search')),
+              h('div', { className: 'sdzh-muted' }, searchError)
+            ),
+            h(Button, { onClick: retrySearch }, t('plugins.index.error.retry'))
+          ) : null,
+          searchState === 'loading' && !entries.length
+            ? h('div', { className: 'sdzh-index-skeleton' },
+                [0, 1, 2].map(function (item) { return h('div', { className: 'sdzh-index-skeleton-row', key: 'skeleton-' + item }); }))
+            : null,
+          entries.length
+            ? h('div', { className: 'sdzh-index-list' }, entries.map(function (entry) {
+                return h(PluginIndexRow, {
+                  key: entry.name,
+                  entry: entry,
+                  metadata: result && result.metadata,
+                  t: t,
+                  ctx: ctx,
+                  expanded: expanded === entry.name,
+                  onToggle: function (name) { setExpanded(name); }
+                });
+              }))
+            : searchState === 'ready' ? h('div', { className: 'sdzh-empty' }, t('plugins.index.empty')) : null,
+          hasMore ? h('div', { className: 'sdzh-index-more' },
+            h(Button, { onClick: function () { runSearch(url, { reset: false }); }, disabled: busy }, loadingMore ? t('plugins.index.loading') : t('plugins.index.loadMore'))
+          ) : null
+        );
+      }
+
       function PluginAdminPage(props) {
         var t = typeof props.t === 'function'
           ? props.t
@@ -1196,6 +1960,7 @@
         var [checking, setChecking] = useState(false);
         var [updating, setUpdating] = useState(null);
         var [confirm, setConfirm] = useState(null);
+        var [subview, setSubview] = useState('installed');
         var alive = useRef(true);
         var abortRef = useRef(null);
         var confirmRef = useRef(null);
@@ -1311,8 +2076,42 @@
           }
         }
 
+        function pageHeader(actions) {
+          return h('div', { className: 'sdzh-header' },
+            h('div', { className: 'sdzh-heading' },
+              h('h2', { className: 'sdzh-title' }, t('plugins.title')),
+              h('p', { className: 'sdzh-subtitle' }, t('plugins.subtitle'))
+            ),
+            actions ? h('div', { className: 'sdzh-header-actions' }, actions) : null
+          );
+        }
+
+        var viewSwitch = h('div', { className: 'sdzh-index-switch', role: 'group', 'aria-label': t('plugins.index.switch.label') },
+          h('button', {
+            type: 'button',
+            'aria-pressed': subview === 'installed' ? 'true' : 'false',
+            onClick: function () { setSubview('installed'); }
+          }, t('plugins.index.switch.installed')),
+          h('button', {
+            type: 'button',
+            'aria-pressed': subview === 'index' ? 'true' : 'false',
+            onClick: function () { setSubview('index'); }
+          }, t('plugins.index.switch.index'))
+        );
+
+        if (subview === 'index') {
+          return h('div', { className: 'sdzh-page' },
+            h('style', null, CSS),
+            pageHeader(null),
+            viewSwitch,
+            h(PluginIndexView, { t: t, ctx: props.ctx })
+          );
+        }
+
         if (page === 'loading') {
           return h('div', { className: 'sdzh-page' }, h('style', null, CSS),
+            pageHeader(null),
+            viewSwitch,
             h(Card, { title: t('plugins.title') },
               h(Spinner, { label: t('plugins.loading') }),
               h('p', { className: 'sdzh-muted' }, t('plugins.loadingHint'))
@@ -1321,6 +2120,8 @@
         }
         if (page === 'error') {
           return h('div', { className: 'sdzh-page' }, h('style', null, CSS),
+            pageHeader(null),
+            viewSwitch,
             h(ErrorPanel, { t: t, error: errorInfo(t, error), onRetry: function () { void load({ refresh: true }); } })
           );
         }
@@ -1335,16 +2136,11 @@
 
         return h('div', { className: 'sdzh-page' },
           h('style', null, CSS),
-          h('div', { className: 'sdzh-header' },
-            h('div', { className: 'sdzh-heading' },
-              h('h2', { className: 'sdzh-title' }, t('plugins.title')),
-              h('p', { className: 'sdzh-subtitle' }, t('plugins.subtitle'))
-            ),
-            h('div', { className: 'sdzh-header-actions' },
-              h(Button, { kind: 'primary', onClick: function () { void checkUpdates(); }, disabled: busy }, checking ? t('plugins.checking') : t('plugins.check')),
-              h(Button, { onClick: function () { void load({}); }, disabled: busy }, t('plugins.refresh'))
-            )
-          ),
+          pageHeader([
+            h(Button, { kind: 'primary', onClick: function () { void checkUpdates(); }, disabled: busy }, checking ? t('plugins.checking') : t('plugins.check')),
+            h(Button, { onClick: function () { void load({}); }, disabled: busy }, t('plugins.refresh'))
+          ]),
+          viewSwitch,
           notice ? h(Banner, { tone: notice.kind === 'ok' ? 'success' : 'danger' }, notice.text) : null,
           warnings.length ? h(Banner, { tone: 'warning' }, h('div', null,
             h('strong', null, t('plugins.warning')),
@@ -2521,11 +3317,46 @@
         );
       }
 
+
+      /**
+       * 设置侧边栏「描述汉化」图标（0.2.2 settings.section.icon 槽）。
+       * 跟随 active 与主题色；尺寸按槽传入的 size 适配 25–40px。
+       */
+      function BetterSkillIcon(props) {
+        var size = typeof props.size === 'number' && isFinite(props.size) ? Math.max(25, Math.min(40, props.size)) : 28;
+        var color = props.active ? 'var(--dsw-alias-brand-primary, currentColor)' : 'var(--dsw-alias-label-primary, currentColor)';
+        return h('svg', {
+          xmlns: 'http://www.w3.org/2000/svg',
+          width: size,
+          height: size,
+          viewBox: '0 0 28 28',
+          fill: 'none',
+          'aria-hidden': 'true',
+          focusable: 'false',
+          style: { display: 'block', color: color }
+        },
+          h('rect', {
+            x: 1.5, y: 1.5, width: 25, height: 25, rx: 7,
+            stroke: 'currentColor', strokeWidth: 1.5,
+            fill: props.active ? 'var(--dsw-alias-bg-layer-2, transparent)' : 'transparent',
+            opacity: props.active ? 1 : 0.85
+          }),
+          h('text', {
+            x: 14, y: 19, textAnchor: 'middle',
+            fontSize: 14.5, fontWeight: 600, fontFamily: 'system-ui, -apple-system, sans-serif',
+            fill: 'currentColor'
+          }, '译')
+        );
+      }
+
       function apply(ctx) {
         ctx.effect(function () {
           return ctx.locale.register(NS, DICT);
         }, 'skill-desc-zh: locale');
         var t = ctx.locale.bind(NS);
+        ctx.effect(function () {
+          return installPluginMarketBridge(ctx);
+        }, 'skill-desc-zh: plugin-market events');
         ctx.slots.inject('settings.section', function () {
           return ctx.slots.register({
             name: 'settings.section',
@@ -2534,7 +3365,15 @@
             label: function () { return t('nav'); },
             locale: NS
           }, function BetterSkillPanel(props) {
-            return h(BetterSkillPage, Object.assign({}, props, { t: props.t || t }));
+            return h(BetterSkillPage, Object.assign({}, props, { t: props.t || t, ctx: ctx }));
+          });
+        });
+        ctx.slots.inject('settings.section.icon', function () {
+          return ctx.slots.register({
+            name: 'settings.section.icon',
+            id: 'skill-desc-zh'
+          }, function BetterSkillIconSlot(props) {
+            return h(BetterSkillIcon, props);
           });
         });
       }
@@ -2564,9 +3403,26 @@
           errorInfo: errorInfo,
           phaseToken: phaseToken,
           translate: translate,
+          BetterSkillIcon: BetterSkillIcon,
+          IndexIcon: IndexIcon,
           BetterSkillPage: BetterSkillPage,
           SettingsPage: SettingsPage,
           PluginAdminPage: PluginAdminPage,
+          PluginIndexView: PluginIndexView,
+          PluginIndexRow: PluginIndexRow,
+          installPluginMarketBridge: installPluginMarketBridge,
+          indexText: indexText,
+          indexSourceLabel: indexSourceLabel,
+          indexVersionParts: indexVersionParts,
+          compareIndexVersions: compareIndexVersions,
+          sortIndexVersions: sortIndexVersions,
+          indexEntryVersion: indexEntryVersion,
+          indexStatusInfo: indexStatusInfo,
+          indexTextList: indexTextList,
+          indexEntryTags: indexEntryTags,
+          indexCompatInfo: indexCompatInfo,
+          mergeIndexEntries: mergeIndexEntries,
+          indexSearchQuery: indexSearchQuery,
           SkillAdminPage: SkillAdminPage,
           Boundary: Boundary
         }

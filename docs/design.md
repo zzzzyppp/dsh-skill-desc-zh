@@ -686,9 +686,9 @@ user:   {"office-docx":"Create, read, edit, and validate Word documents (.docx).
 
 ---
 
-## 15. 追加（v0.2.0，2026-10-21）：斜杠命令描述中文化
+## 15. 追加（v0.2.0，2026-10-21）：斜杠命令描述汉化
 
-> 本节扩展本文件原先只覆盖“技能描述”的范围：§1.1 的目标与 §1.3 的非目标写作时只涉及技能，未列斜杠命令。自本节起“命令描述中文化”纳入 v0.2.0 范围；此前任何“斜杠命令不在范围内”的表述一并作废，旧文保留作 v0.1.0/v0.1.1 历史记录。机制设计与调查证据分别见 [`command-desc-design.md`](command-desc-design.md)、[`command-desc-investigation.md`](command-desc-investigation.md)，独立验收见 [`verification.md`](verification.md) 的 v0.2.0 章节。
+> 本节扩展本文件原先只覆盖“技能描述”的范围：§1.1 的目标与 §1.3 的非目标写作时只涉及技能，未列斜杠命令。自本节起“命令描述汉化”纳入 v0.2.0 范围；此前任何“斜杠命令不在范围内”的表述一并作废，旧文保留作 v0.1.0/v0.1.1 历史记录。机制设计与调查证据分别见 [`command-desc-design.md`](command-desc-design.md)、[`command-desc-investigation.md`](command-desc-investigation.md)，独立验收见 [`verification.md`](verification.md) 的 v0.2.0 章节。
 
 ### 15.1 目标与范围
 
@@ -720,3 +720,48 @@ user:   {"office-docx":"Create, read, edit, and validate Word documents (.docx).
 - 未在线验证：真实 GUI `/` 菜单像素、真实 `/acp`/`/agent-teams` 点击副作用、真实 LLM 翻译、真实宿主升级/禁用；这些必须在用户重启 DSH 后确认。
 - 当前安装形态：profile 依赖为 `link:`，源码包版本 0.2.0；本次未安装/升级 profile，运行中进程仍是重启前的 v0.1.1。
 - 历史样例：§4.7 的 `"version": "0.1.0"` 与不含 `targets.commands` 的配置片段是 v0.1 记录；当前包版本、配置项与默认值以 README §2.3 和本节为准。
+
+## 16. 追加（v0.7.0，2026-11-06）：插件索引只读子页
+
+### 16.1 目标与边界
+
+「Better Skill → 插件管理」Tab 顶部增加二级切换「已安装 | 插件索引」。索引子页只读展示宿主「设置 → 插件 → 发现」已配置的索引源与搜索结果，数据全部来自 `ctx.remote.pluginMarket`，不新增 host HTTP 路由、不改 host 实现、不执行安装或任何写操作。默认仍是「已安装」，原有插件检查更新/更新流程不变；索引源增删/排序、条目安装、完整 Markdown 详情均不在本期范围。
+
+### 16.2 数据契约（宿主 0.2.2-rc.1）
+
+- `remote.pluginMarket.listIndexes()` → `{ url, title?, description?, error? }[]`（不发请求）。
+- `remote.pluginMarket.search(url, query)` → `{ url, title, description?, metadata{categories,labels,sortKeys}, fetchedAt, entries, total, nextOffset }`；`query = { text?, category?, labels?, sort:{kind:'index'}, offset, limit (1-100), refresh?, fetchedAt? }`；`metadata.categories/labels` 是 `Record<id,{title:LocalizedText}>`（索引级声明，不是字符串数组）。
+- `entry`：`{ name, title?, description?, icon?, author?, homepage?, repository?, metadata, versions, defaultVersion?, installation{status,installedVersion?} }`；`entry.metadata` 是 `{category?:string, keywords:string[], labels:string[], sortKeys}`（分类/标签存 id，展示时用 search 结果的 `metadata` 声明解析标题）；`version`：`{ version, publishTimestamp, source, engines, install{spec,registry?}, compatibility }`；`compatibility`：`{compatible:true}` 或 `{compatible:false,runtimeVersion,requirements,exempted}`（`exempted:true` 表示已豁免、可安装，优先于 incompatible 展示）；`installation.status`：`not-installed|installed|update-available|different-version|provided`。
+- 多语言文本统一经 `ctx.locale.resolveText(text)`；缺失 `remote.pluginMarket` 时优雅降级，不硬注入该子服务。
+- 事件：`remote.$on('plugin-market/changed')`、`remote.$on('plugin-manager/changed')`、`ctx.on('connection/reset')`，全部在 `ctx.effect` 内注册并在 dispose 时清理。
+
+### 16.3 组件与状态
+
+`PluginIndexView` 是独立函数组件，`PluginAdminPage` 只负责二级切换与分支：
+
+- 本地状态：`sources`、`sourceState`、`sourceError`、`url`、`query`、`result`、`searchState`、`searchError`、`expanded`、`loadingMore`；`alive/seq` 防止卸载后回写与旧响应覆盖新响应。
+- 首屏：`listIndexes()`；源下拉用 `resolveText(title)`，无标题回退 URL hostname；`error` 源禁用并显示原因；无源显示配置指引 + 刷新。
+- 搜索：250ms 防抖；`search(url,{text,sort:{kind:'index'},offset:0,limit:50})`；「加载更多」沿用当前 `fetchedAt` 与 `nextOffset`，按 `name` 去重追加；显示 `total`。
+- 同步：进入/切回索引视图、`plugin-market/changed`、`connection/reset` 重读源并重跑当前搜索；`plugin-manager/changed` 仅重跑搜索刷新安装状态；视图卸载取消订阅、递增 seq、忽略迟到响应。
+- 行：图标失败回退首字母；标题/包名/描述/作者/默认版本/状态徽章；`exempted:true` 先显示“已豁免”，否则 `compatible:false` 显示“不兼容（宿主 X）”；详情含作者/主页/仓库、分类/标签（用索引声明的 `resolveText(title)`，无声明回退 id）、SemVer 降序版本（推荐/预发布/已安装/不兼容/豁免）、`install.spec`/`registry` 与只读安装提示。
+- 加载/错误：sources 失败整块错误 + 重试；search 失败保留旧列表 + 错误条 + 可 `refresh:true` 重试；首次加载骨架行；空结果态；状态区 `role="status" aria-live="polite"`。
+- 降级：`ctx.remote` 或 `ctx.remote.pluginMarket` 不存在时显示明确提示，不阻塞「已安装」子页。
+- 第三方数据安全：全部纯文本渲染，禁用 `dangerouslySetInnerHTML`；超长文本 CSS 截断；图标仅接受 `http(s)`/`data:image`；主页/仓库外链仅接受 `http(s)`，拒绝伪协议；外链统一 `target="_blank" rel="noreferrer"`。
+
+### 16.4 接线与 locale
+
+- `module.exports.inject` 增加 `remote`，但不硬注入 `remote.pluginMarket`；`apply` 在 `ctx.effect` 中调用 `installPluginMarketBridge(ctx)`，在 `settings.section` wrapper 把 `ctx` 传给 `BetterSkillPage`/`PluginAdminPage`。
+- `locale/zh.json` 与 `locale/en.json` 各新增 47 个 `plugins.index.*` 键（345 keys），`client.js` 内联 `INDEX_I18N` 同步；`check-client` 校验 locale 对齐、inline 一致、inject 含 `remote` 与索引静态标记。
+- `PAGE_VERSION` 保持 `0.7.0`；未改 package 版本/宿主路由/工具语义。
+
+### 16.5 验证与未验证项
+
+- 已通过：`npm run check:client` 19/19；`test/client.test.mjs` **27/27**（初始加载/详情、源切换+防抖、同 `fetchedAt` 分页去重、事件重载+卸载、缺服务降级、源错误重试+搜索失败保留旧列表、行状态/兼容/版本/外链、二级切换、SemVer 排序、伪协议拒绝、Record 分类/标签、缺失 title 回退、exempted 优先）；全量 `npm test` 229/229 与四套 e2e（32/21/10/7）见验收记录。
+- t38 首验发现 F1（宿主 `Record` 分类/标签被当数组，显示为空）、F2（`exempted:true` 被 `compatible:false` 抢先判为不兼容）；t40 修复，t41 复验又发现 F1R（声明对象无 title 时渲染 `[object Object]`），t42 修复，t43 独立二次复验 PASS。修复只改 `client.js`/`test/client.test.mjs` 与设计记录，不改宿主/HTTP/安装路径。
+- 真实 GUI、认证后点击、真实索引服务与事件时序未验证；见 §16.5 末段与 `docs/verification.md` 的 v0.7.0 t38/t41/t43 节。
+- 未验证：真实宿主 GUI 的索引源渲染、认证后点击、真实索引服务与事件时序，需用户重启 DSH 后在已配置「设置 → 插件 → 发现」索引源的环境人工确认。本次不安装/升级 profile。
+
+
+### 16.6 命名与旧名对照
+
+v0.7.0 起用户可见名称统一为「**描述汉化**」（README、locale 中文、client 内联 DICT、工具卡片/status、命令层提示、当前设计文档）。历史设计/验收文档中的「描述中文化」是同一插件旧名，仅保留在 `docs/verification.md` 顶部说明与历史节，用于追溯，不代表当前产品名。内部标识 `dsh-skill-desc-zh` / `skill-desc-zh` / `skill_desc_zh` / locale namespace / `dsh-skill-desc-zh.activeTab` 保持不变，避免破坏既有安装与用户设置。

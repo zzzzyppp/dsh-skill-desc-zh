@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 命令描述中文化的端到端验证（不启动 DSH、不改磁盘、不联网）。
+ * 命令描述汉化的端到端验证（不启动 DSH、不改磁盘、不联网）。
  *
  * 为什么必须是 Electron-as-node：脚本直接 import 宿主 app.asar 内的
  * `@deepseek-ai/cordis`、`@deepseek-ai/dsh-scope`、`@deepseek-ai/dsh-commands`
@@ -248,5 +248,5 @@ check('agent 视角与 global 视角并存，互不污染', () => {
 
 for (const dispose of disposers) dispose()
 
-console.log(`\n命令描述中文化端到端：${checks.length}/${checks.length} 项通过`)
+console.log(`\n命令描述汉化端到端：${checks.length}/${checks.length} 项通过`)
 process.exit(0)

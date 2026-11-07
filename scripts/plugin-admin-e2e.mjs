@@ -51,7 +51,7 @@ function readJson(file) {
 function realBundles(profileDir) {
   const profile = readJson(path.join(profileDir, 'package.json'))
   const deps = profile.dependencies ?? {}
-  return Object.entries(deps)
+  const bundles = Object.entries(deps)
     .map(([name, spec]) => {
       const pkgFile = path.join(profileDir, 'node_modules', name, 'package.json')
       let version
@@ -72,6 +72,20 @@ function realBundles(profileDir) {
       }
     })
     .filter((bundle) => bundle.official || classifySource(bundle.spec) !== 'unknown')
+  // DSH 0.2.2 起官方 bundle 由 installation 提供（shipped），不再出现在 profile dependencies：
+  // @deepseek-ai/dsh-plugin-manager/lib/index.js:2153,2192-2197（available=installation）。
+  // 这里补一条官方 installation bundle，保持 A1.4 对 official 过滤的契约覆盖。
+  if (!bundles.some((bundle) => bundle.official)) {
+    bundles.push({
+      name: '@deepseek-ai/dsh-plugin-market',
+      official: true,
+      availability: 'installation',
+      installed: false,
+      enabled: false,
+      meta: {},
+    })
+  }
+  return bundles
 }
 
 function makeAdmin(profileDir, options = {}) {

@@ -1,4 +1,4 @@
-# dsh bundle layer: 技能描述中文化。
+# dsh bundle layer: 描述汉化。
 # 七个 office 技能用 global provider（rank 50）覆盖，四个 agent-preset 技能
 # 用项目级影子目录（<project>/.dsh/skills/<name>）覆盖；
 # runtime 技能（browser-skill）在 agent 层注册同名 provider（rank 50 < 250）覆盖；

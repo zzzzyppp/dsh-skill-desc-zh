@@ -1,3 +1,5 @@
+> 名称说明（v0.7.0 起）：用户可见名称由「描述中文化」改为「描述汉化」；本文件历史节保留旧名原文。
+
 # 验收报告：技能描述中文化插件（skill-desc-zh）
 
 - 日期：2026-10-21（Asia/Shanghai）
@@ -1730,3 +1732,314 @@ t34 对 F1/F2 的修复独立复现通过；I1 按“无 pre-t31 逐字节基线
 ### 8. 终审
 
 **verdict：pass（源码级，t33 文档可继续）**。F1/F2 已关闭；I1 以“接受替代证据（未发现变更，非逐字节证明）”结案，并把 t34 的 30 条 SHA 清单作为后续基准；全量回归全绿。线上 GUI/真实 bundle/真实写操作仍须重启后验收，本结论不把“待重启”写成已验证。
+
+---
+
+## 追加（v0.7.0，2026-11-06）：DSH 0.2.2 适配、描述汉化与只读插件索引（t38）
+
+### 0. 结论
+
+**verdict：needs_revision（源码级）**。独立复跑与只读/安全边界通过；但插件索引的**真实 host 数据形状**有两处未覆盖：
+
+1. `metadata.categories` / `metadata.labels` 在 host 是 `Record<string,{title}>`，实现只接受数组，真实数据永远不显示（F1，medium）。
+2. host 的 `compatibility:{compatible:false,exempted:true}` 会先命中“不兼容”分支，`exempted` 分支不可达；“已豁免”只出现在展开版本列表，行级摘要仍显示“不兼容”（F2，medium）。
+
+两处均为 UI 展示/信息正确性问题，不影响只读/安全边界；本轮未修改任何生产文件。修好 F1/F2 后可重新跑本节 A6/A8/A9 并给出 pass。
+
+### 1. 范围与环境
+
+- 代码：`/Users/ypz/dsh-plugins/skill-desc-zh`，package `dsh-skill-desc-zh@0.7.0`。
+- profile：`~/.dsh/profiles/desktop`，依赖 `link:/Users/ypz/dsh-plugins/skill-desc-zh`，bundle 含 `dsh-skill-desc-zh`；本轮**未安装/升级/重启**。
+- host：Desktop `0.2.2-rc.1`；插件 `engines.dsh` 为 `>=0.2.1-rc.2 <0.3.0-0`，无 `@deepseek-ai/*` peerDependencies。
+- 只读验证；写作用域仅本文档。快照：`~/.dsh/.file-backups/2026-11-06T15-28-22-804Z/verification.md`。
+
+### 2. 独立命令证据
+
+| 命令 | 结果 |
+| --- | --- |
+| `node --check` 递归 lib/scripts/test/client.js | **49 文件 / 0 失败**（含 `test/helpers` 2 个） |
+| `npm test` | **226 / 226 pass / 0 fail**（695.9ms，Node v24.20.0） |
+| `node --test test/client.test.mjs` | **24 / 24 pass**（655.3ms） |
+| `node scripts/check-client.mjs` | **19 checks passed**（0.7.0、单 section+icon、三 Tab、索引视图、locale 345、icon 819B、syntax） |
+| `node scripts/skills-e2e.mjs` | **32 / 32** |
+| `npm run e2e:commands` | **10 / 10** |
+| `npm run e2e:agent-layer` | **7 / 7** |
+| `npm run e2e:plugin-admin` | **21 / 21**（0.2.2 synthetic official bundle 回退，无真实安装） |
+| `node scripts/verify.mjs --expect-installed --expect-applied` | exit 0；49 文件无永久删除；trash 通道；4 shadows；profile link+bundle |
+| locale zh/en | 各 **345** 键，0 missing/extra |
+| profile mtime | package `2026-11-06T01:42:03`、lockfile `2026-11-03T17:05:21`，与开始时一致 |
+
+### 3. A 表（本轮）
+
+| 项 | 状态 | 说明 |
+| --- | --- | --- |
+| A1 0.2.2/engines/no peer | pass | `0.2.2-rc.1` 满足 `>=0.2.1-rc.2 <0.3.0-0`；无 peer |
+| A2 `settings.section.icon` 注册 | pass（源码） | `client.js:3270-3278`，id/name 正确；真实渲染待重启 |
+| A3 单 section/三 Tab | pass | 仅 `client.js:3283-3292` 一个 `settings.section` id skill-desc-zh order 16 |
+| A4 Tab 行为/ARIA/storage | pass | 24 项 client 测试 + 独立 probe；默认 translate、非法值/抛错回退、Home/End/左右环绕、仅挂载当前页 |
+| A5 只读/无写调用 | pass | 无 `setIndexes`/`installBundle`/`removeBundle`/`setPluginEnabled`；无 `dangerouslySetInnerHTML` |
+| A6 索引来源/搜索/分页/事件/无 remote | pass（repo fake remote） | client 24/24；独立 bridge probe 订阅 3 事件并可 dispose |
+| A7 状态/SemVer | pass（纯函数） | not-installed/installed/update-available/different-version/provided；beta.10 > beta.2 > 1.0 |
+| A8 兼容性摘要 | **needs_revision（F2）** | false+exempted 被显示为“不兼容”，`exempted` 分支不可达 |
+| A9 分类/标签 | **needs_revision（F1）** | host record 被 `Array.isArray` 丢弃，详情不显示 |
+| A10 外链/图标安全 | pass | href 仅 http(s)，`rel=noreferrer`；icon 仅 http(s)/data:image，`referrerpolicy`/`loading=lazy`，失败回退首字母 |
+| A11 改名为描述汉化 | pass | 用户可见文案/README/locale 已改；旧名仅 verification 历史 |
+| A12 内部 id/tool 不变 | pass | `NS`/`TAB_STORAGE_KEY`/`TOOL_NAME`/package/line id 未改 |
+| A13 locale 345 同键 | pass | 345/345，0 diff |
+| A14 无 host HTTP 安装/索引路由 | pass | 只读 `ctx.remote.pluginMarket`；未新增 HTTP route |
+| A15 t36/t37 回归 | pass | 226/226、check 19、e2e 32/21/10/7 |
+| A16 删除纪律 | pass | 生产代码无 rm/unlink/rmdir/truncate/find-delete/git clean；`lib/trash.js` 唯一通道 |
+| A17 profile 未改 | pass | 依赖与 bundle 保持 link，package/lockfile mtime 未变 |
+| A18 仅追加文档 | pass | 本轮只改本文档 |
+| A19 真实浏览器/真实 market 网络 | 待重启 | 无浏览器会话；未连接真实插件市场 |
+| A20 0.2.2 设置页真实渲染/图标尺寸 | 待重启 | host 传入 `size:16`；`BetterSkillIcon` 按设计钳制 25–40，实际视觉需看 |
+
+### 4. 发现（需返工）
+
+**F1（medium）分类/标签不显示真实 host 数据。**
+- 位置：`client.js:1585-1588 indexTextList`。
+- 事实：host schema 的 `metadata.categories`/`labels` 是 `Record<string,{title}>`（见 `app.asar/dsh/node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js` 的 pluginMarket 类型，约 17517-17623）；`indexTextList` 只处理 `Array.isArray`，record 直接返回 `[]`。现有测试用数组（`test/client.test.mjs:643`、`:903`），因此没覆盖真实 shape。
+- 独立复现：`/tmp/t38-record-probe.mjs` 用 `{categories:{tools:{title:'工具'}},labels:{demo:{title:'演示'}}}` 渲染 `PluginIndexRow`，`HAS_CATEGORY_VALUE false`、`HAS_LABEL_VALUE false`。
+- 修复：`indexTextList` 同时支持数组与 record（`Object.values` 后取 `title`/字符串），并加一条真实 record shape 的 client 测试。
+
+**F2（medium）兼容性摘要把“已豁免”显示为“不兼容”。**
+- 位置：`client.js:1398-1416 indexCompatInfo`。
+- 事实：`if (compatibility.compatible === false)` 在 `if (compatibility.exempted)` 之前直接 return；host 的 `{compatible:false,exempted:true}` 永远走不到豁免分支。展开的版本列表（`:1566-1574`）虽同时显示“不兼容”和“已豁免”两个 tag，但行级摘要仍误导。
+- 独立复现：`/tmp/t38-probe.mjs` 输出 `COMPAT_FALSE_EXEMPTED {"tone":"danger","label":"plugins.index.compat.incompatible(0.2.1)","detail":""}`，`COMPAT_BUG_REPRODUCED true`。
+- 修复：先判 `exempted`（warning 标签“已豁免”，可附 runtimeVersion），或同时渲染“不兼容 + 已豁免”；增加该 shape 的测试。
+
+### 5. 只读/安全与 0.2.2 适配
+
+- 索引视图仅调用 `listIndexes/readEntryDetail/search`；未发现写调用；`IndexIcon` 拒绝 `javascript:` 等伪协议（独立 probe 确认 fallback），外链 `rel=noreferrer`，图标 `referrerpolicy=no-referrer`、`loading=lazy`。
+- `client.js:3239-3252` 按设计把 host 传入的 size 钳制到 25–40（host 侧 `dsh-client-ui-settings-general/lib/client.js:310-316` 传 `size:16`）；这是本轮唯一视觉观察项，是否需要在 16px 槽内改为更小尺寸待重启看实际效果，暂不列为返工项。
+- rename：旧名仅 `docs/verification.md` 历史；README/client/locale/lib/tool/command-layer/scripts/tests 均为“描述汉化”；内部 `NS`/tool/package id 保持不变，兼容性不受影响。
+- t36 的 engines/no peer 与 t37 的只读索引边界均复核；plugin-admin e2e 的 synthetic official bundle 是 0.2.2 适配测试，不执行真实安装。
+
+### 6. 未验证 / 待重启
+
+1. 真实 GUI：单入口 Better Skill 的图标视觉（host size 16 vs 组件 25）、三 Tab 焦点/窄窗、真实 client bundle 加载。
+2. 真实 `ctx.remote.pluginMarket` 网络请求、真实 plugin index 数据（尤其 record categories/labels、exempted 兼容性）、搜索/分页/事件。
+3. 真实 React 渲染下的分类/标签与兼容性展示（本轮为纯函数/行渲染探针 + repo fake remote）。
+4. t36/t37 之外的 0.2.2 其它设置页交互（插件管理/技能管理 Tab）未做浏览器点击。
+5. 未安装/升级/重启；本轮不把上述项写成已验证。
+
+### 7. 回滚
+
+- 本轮只追加本文档，未改生产代码/package/locale/state/profile。
+- 文档快照：`~/.dsh/.file-backups/2026-11-06T15-28-22-804Z/verification.md`。
+- 插件层回滚：`skill_desc_zh(action="restore")` → `plugin_manager set_plugin target="include:skill-desc-zh" enabled=false`；彻底移除先 restore 再 `remove_bundle`。
+- 删除/覆盖只走 `node ~/.dsh/skills/safe-delete-trash/trash.mjs`（覆盖前 `--snapshot`）。
+
+### 8. 终审
+
+**verdict：needs_revision（源码级）**。A1–A7、A10–A18 通过；A8/A9 由 F1/F2 返工；A19/A20 待重启。F1/F2 修复后需重跑 `npm test`、`node --test test/client.test.mjs`、`check-client`、`verify.mjs`，并补真实 record/exempted shape 测试；本轮未发现只读越权、永久删除或 profile 改动。
+
+---
+
+## 追加（v0.7.0 复验，2026-11-06）：t40 F1/F2 修复确认（t41）
+
+### 0. 结论
+
+**verdict：needs_revision（源码级）**。F2 已关闭；F1 的真实 Record 主路径已关闭，但**缺失 `title` 的兜底仍失败**：`indexTextList` 对 `{empty:{}}` 返回 `title:"[object Object]"`，分类路径会把它渲染出来。全量回归无退化（228/228、client 26/26、check 19/19、四套 e2e 32/21/10/7、node --check 49/49、verify exit 0）。本轮只追加本文档，未改生产代码/tests/package/locale。
+
+### 1. 范围与环境
+
+- 代码：`dsh-skill-desc-zh@0.7.0`；profile `link:/Users/ypz/dsh-plugins/skill-desc-zh` + bundle。
+- host：Desktop `0.2.2-rc.1`；`engines.dsh` 满足；无 `@deepseek-ai/*` peers。
+- 只读复验；写作用域仅本文件。快照：`~/.dsh/.file-backups/2026-11-06T15-36-22-294Z/verification.md`。
+- 不安装/不重启/不改 profile/无永久删除；真实 GUI 与真实 remote 时序不在本轮重验。
+
+### 2. 独立命令证据
+
+| 命令 | 原始结果 |
+| --- | --- |
+| `npm test` | tests **228** / pass **228** / fail **0**（735.6ms，Node v24.20.0） |
+| `node --test test/client.test.mjs` | tests **26** / pass **26** / fail **0**（698.4ms） |
+| `npm run check:client` | **19 checks passed** |
+| `npm run e2e:skills` | **32 / 32** 断言 |
+| `npm run e2e:plugin-admin` | **21 / 21** |
+| `npm run e2e:commands` | **10 / 10** |
+| `npm run e2e:agent-layer` | **7 / 7** |
+| `node --check` 递归 lib/scripts/test/client.js | **49 files / 0 fail** |
+| `node scripts/verify.mjs --expect-installed --expect-applied` | exit 0；state hostVersion 0.2.2-rc.1、skills 12、4 shadows、profile link+bundle |
+| locale zh/en | 各 **345** 键，0 missing/extra |
+| profile mtime | package `2026-11-06T01:42:03`、lockfile `2026-11-03T17:05:21`，未变 |
+
+### 3. F1 独立探针（真实 host shape，不是只跑 t40 测试）
+
+探针：`/tmp/t41-f1-probe.mjs`、`/tmp/t41-f1-missing.mjs`；ctx 使用真实 `locale.resolveText` 形状，Record 声明含 `{en, "zh-CN"}`。
+
+```
+REC_LIST [{"id":"tools","title":"工具"},{"id":"plain","title":"纯文本"},{"id":"empty","title":"[object Object]"}]
+ARR_LIST [{"id":"旧工具","title":"旧工具"},{"id":"demo","title":"演示"},{"id":"2","title":"[object Object]"}]
+REAL_TAGS {"categories":[{"id":"tools","title":"工具"}],"labels":[{"id":"demo","title":"演示"},{"id":"empty","title":"empty"},{"id":"missing","title":"missing"}]}
+ROW_HAS_工具 true ROW_HAS_演示 true
+MISSING_TITLE_TAGS {"categories":[{"id":"empty","title":"[object Object]"}],"labels":[]}
+ROW_HAS_OBJECT_OBJECT true
+```
+
+结论：
+
+- Record `categories/labels` 的 id→title 解析已修好；`{en,"zh-CN"}` 取中文正确；labels 缺失 title 会回退 id。
+- **残留 F1R**：Record 声明存在但无 `title`（`{}`）时，`indexTextList` 把 declaration 对象交给 `indexText`，后者 `String(value)` 得到 `"[object Object]"`；`indexEntryTags` 的分类分支同样中招。数组 fake 的 `{}` 也会得到 `[object Object]`。任务要求的“缺失 title 的兜底”未满足。
+
+### 4. F2 独立探针
+
+探针：`/tmp/t41-f2-probe.mjs`、`/tmp/t41-f2-single.mjs`。
+
+```
+EXEMPT_TRUE {"tone":"warning","label":"已豁免","detail":""}
+EXEMPT_FALSE {"tone":"danger","label":"不兼容（宿主 0.2.1）","detail":""}
+COMPAT_TRUE null
+SINGLE_EXEMPT true false
+```
+
+结论：`exempted===true` 优先，行级摘要只显示「已豁免」；`exempted:false` 显示「不兼容（宿主 0.2.1）」；`compatible:true` 无提示；版本列表 `incompatible` 已排除 exempted（`client.js:1570-1578`）。**F2 关闭。**
+
+### 5. A 表（本轮）
+
+| 项 | 状态 | 说明 |
+| --- | --- | --- |
+| A1 F1 Record 主路径 | pass | 真实 Record + LocalizedText；`tools/lint` 正确解析 |
+| A2 F1 缺失 title 兜底 | **fail（F1R）** | `{}` → `[object Object]`；分类路径可渲染 |
+| A3 F2 exempted 优先 | pass | true→已豁免；false→不兼容；true(compatible)→null |
+| A4 版本列表一致 | pass | `client.js:1570-1578`；exempted 不再同时标不兼容 |
+| A5 全量回归不退化 | pass | 228/26/19/32/21/10/7/49；verify exit 0 |
+| A6 只读/无写调用 | pass | 无 `setIndexes/readEntryDetail/installBundle/removeBundle/setPluginEnabled`；无 `dangerouslySetInnerHTML` |
+| A7 外链/图标安全 | pass | href 仅 http(s)+`rel=noreferrer`；icon `referrerpolicy/loading=lazy`，伪协议回退 |
+| A8 inject 未被写死 | pass | `client.js:3356` 仍为 `['slots','locale','remote']`，未硬注入 market |
+| A9 0.2.2 适配/版本 | pass | version/PAGE_VERSION 0.7.0；engines；icon slot；单 section 三 Tab；内部标识未变 |
+| A10 更名口径 | pass | `描述中文化` 仅 verification 顶部说明+历史节；用户可见均为“描述汉化” |
+| A11 profile/安装未变 | pass | link+bundle；package/lockfile mtime 未变 |
+| A12 仅追加文档 | pass | 本轮只改 `docs/verification.md` |
+| A13 真实 GUI/remote 时序 | 待重启（不重验） | 按任务范围保持未验证 |
+
+### 6. Finding（需返工）
+
+**F1R（medium）缺失 title 的兜底返回 `[object Object]`。**
+- 位置：`client.js:1619-1647 indexTextList`；分类路径 `client.js:1596-1605 indexEntryTags`；`indexText` 的 `String(value)` 兜底在 `client.js:1298-1304`。
+- 复现：`indexTextList(ctx,{empty:{}})` → `[{"id":"empty","title":"[object Object]"}]`；`indexEntryTags` 的分类声明 `{empty:{}}` → 同样标题；`PluginIndexRow` 渲染 `[object Object]`。
+- 修复：`push()` 在 declaration 无可解析 title 时回退 `id`；分类分支同样使用 `declaration?.title ?? id`；补 `{empty:{}}`、数组 `{}` 的测试。
+
+### 7. 只读/安全/更名/0.2.2
+
+- 索引视图仍只读；未发现写调用；`inject:['slots','locale','remote']`（`client.js:3356`）未写死 `remote.pluginMarket`。
+- `IndexIcon` 仅接受 `http(s)://`/`data:image/`，外链 `rel=noreferrer`；`indexHref` 仅 http(s)。
+- 更名：`grep -rn "描述中文化"` 仅 `docs/verification.md` 顶部说明与历史节；用户可见文案/README/locale 均为“描述汉化”；内部 `NS`/`TAB_STORAGE_KEY`/`TOOL_NAME`/package id 未变。
+- 0.2.2：version/PAGE_VERSION 0.7.0、engines 满足、icon slot 注册、单 `settings.section` order 16 三 Tab、profile link+bundle 未变。
+
+### 8. 未验证 / 待重启
+
+1. 真实 GUI 下 Record 分类/标签、exempted 摘要、图标视觉与三 Tab 渲染。
+2. 真实 `ctx.remote.pluginMarket` 网络、真实索引数据与事件时序。
+3. 未安装/升级/重启；上述项保持“待重启”，不写成已验证。
+
+### 9. 回滚
+
+- 本轮只追加本文档；未改生产代码/package/locale/tests/state/profile。
+- 文档快照：`~/.dsh/.file-backups/2026-11-06T15-36-22-294Z/verification.md`。
+- 插件层：`skill_desc_zh(action="restore")` → `plugin_manager set_plugin target="include:skill-desc-zh" enabled=false`；彻底移除先 restore 再 `remove_bundle`；删除/覆盖只走 `trash.mjs`。
+
+### 10. 终审
+
+**verdict：needs_revision（源码级）**。F2 关闭；F1 主路径关闭但 F1R 缺失-title 兜底未满足，需修 `indexTextList/indexEntryTags` 后重跑 client/check/npm test/verify；全量回归与只读安全未发现退化。
+
+---
+
+## 追加（v0.7.0 二次复验，2026-11-06）：t42 F1R 修复确认（t43）
+
+### 0. 结论
+
+**verdict：pass（源码级，可进入重启后验收）**。F1R 关闭：所有指定输入均不产生 `[object Object]`，缺失 title 时回退 id 或按约定安全丢弃；F1 Record/labels 与 F2 exempted 不回归；全量回归 229/229 等全绿。
+
+### 1. 环境与快照
+
+- `dsh-skill-desc-zh@0.7.0`，profile `link:/Users/ypz/dsh-plugins/skill-desc-zh` + bundle；host Desktop 0.2.2-rc.1。
+- 写作用域仅本文件；快照 `~/.dsh/.file-backups/2026-11-06T15-43-16-972Z/verification.md`。
+- 未改生产代码/locale/tests/package，未安装/重启/改 profile，无永久删除。
+
+### 2. F1R 独立探针（自己写，不跑 t42 测试）
+
+探针：`/tmp/t43-probe.mjs`，直接加载生产 `client.js` 的 `__test__.indexTextList/indexEntryTags/indexCompatInfo`，使用真实 locale resolveText 形状。原始输出（节选）：
+
+```
+string            []
+arrayOne          [{"id":"a","title":"a"}]
+arrayEmptySecond  [{"id":"a","title":"a"}]
+recordTitle       [{"id":"k","title":"T"}]
+recordEmpty       [{"id":"k","title":"k"}]
+recordLocalized   [{"id":"k","title":"中"}]
+categoryEmpty     {"categories":[{"id":"k","title":"k"}],"labels":[]}
+labelsRecord      {"categories":[{"id":"tools","title":"工具"}],"labels":[{"id":"demo","title":"演示"}]}
+null/undefined    []
+```
+
+- `string` 顶层标量按实现约定安全丢弃（返回 `[]`，t42 client 测试同样断言 `[]`）；不产生 `[object Object]`。
+- `['a',{}]` 中空对象被安全丢弃，只保留 `a`。
+- Record `{k:{title:'T'}}`、`{k:{title:{en:'E','zh-CN':'中'}}}` 正确；`{k:{}}` 回退 `k`；分类声明 `{}` 同样回退 id。
+- 全部 JSON 中无 `[object Object]`，`T43 PROBE PASS`。
+
+### 3. F1/F2 不回归
+
+同一探针：
+
+```
+RECORD labels: tools→工具, demo→演示
+F2 exemptTrue  {"tone":"warning","label":"已豁免"}
+F2 exemptFalse {"tone":"danger","label":"不兼容（宿主 0.2.1）"}
+F2 compatibleTrue null
+```
+
+结论：Record/LocalizedText/labels 正常；exempted 优先、false 显示不兼容、compatible true 无提示，均与 t41 断言一致。
+
+### 4. 全量回归（独立重跑）
+
+| 命令 | 结果 |
+| --- | --- |
+| `npm test` | tests **229** / pass **229** / fail **0**（Node v24.20.0） |
+| `node --test test/client.test.mjs` | tests **27** / pass **27** / fail **0** |
+| `npm run check:client` | **19 checks passed**；locale 345 键（88 skill + 47 index） |
+| `npm run e2e:skills` | **32/32** |
+| `npm run e2e:plugin-admin` | **21/21** |
+| `npm run e2e:commands` | **10/10** |
+| `npm run e2e:agent-layer` | **7/7** |
+| `node --check`（lib/scripts/test/client.js） | **49 files / 0 fail** |
+| `node scripts/verify.mjs --expect-installed --expect-applied` | exit 0；49 文件无永久删除；trash 通道；4 shadows；state hostVersion 0.2.2-rc.1/skills 12；profile link+bundle |
+
+### 5. A 表
+
+| 项 | 状态 | 说明 |
+| --- | --- | --- |
+| A1 F1R string 输入 | pass | 返回 `[]` 安全丢弃，无 `[object Object]` |
+| A2 F1R 数组形状 | pass | `['a']`、`['a',{}]` 无对象串；空对象丢弃 |
+| A3 F1R Record title/LocalizedText | pass | `T`、`中` 正确 |
+| A4 F1R 缺失 title 回退 | pass | `{k:{}}`→`k`；分类 `{}`→id |
+| A5 F1 Record categories/labels | pass | tools→工具、demo→演示 |
+| A6 F2 不回归 | pass | exempted/true/false/compatible true 均正确 |
+| A7 全量回归 | pass | 229/27/19/32/21/10/7/49；verify exit 0 |
+| A8 只读/安全 | pass | 无 setIndexes/readEntryDetail/installBundle/removeBundle/setPluginEnabled/dangerouslySetInnerHTML；外链/图标属性仍在 |
+| A9 0.2.2/更名/内部标识 | pass | PAGE_VERSION 0.7.0；单 section 三 Tab；`描述中文化` 仅 verification 历史；NS/TOOL_NAME/package id 未变 |
+| A10 profile/安装未变 | pass | package mtime 2026-11-06T01:42:03、lockfile 2026-11-03T17:05:21；link+bundle |
+| A11 真实 GUI/remote | 待重启（未验证） | 真实网络/事件/视觉/分类渲染不写成已验证 |
+
+### 6. 只读/安全/更名复核
+
+- `grep` 无 `setIndexes|readEntryDetail|installBundle|removeBundle|setPluginEnabled|dangerouslySetInnerHTML`；索引视图只读。
+- `client.js:3382` `inject: ['slots','locale','remote']` 未写死 market；`IndexIcon` 仅 http(s)/data:image，外链 `rel=noreferrer`。
+- 更名：`grep -rn "描述中文化"` 仅 `docs/verification.md` 顶部说明与历史节；用户可见文案/README/locale 均为“描述汉化”；内部标识未变。
+- 0.2.2：version/PAGE_VERSION 0.7.0、engines 满足、icon slot、单 `settings.section` order 16 三 Tab。
+
+### 7. 未验证 / 待重启
+
+1. 真实 GUI 下 Record 分类/标签、exempted 摘要、图标视觉与三 Tab 渲染。
+2. 真实 `ctx.remote.pluginMarket` 网络、真实索引数据与事件时序。
+3. 未安装/升级/重启；上述项保持“待重启”，不写成已验证。
+
+### 8. 回滚
+
+- 本轮只追加本文档；快照 `~/.dsh/.file-backups/2026-11-06T15-43-16-972Z/verification.md`。
+- 插件层：`skill_desc_zh(action="restore")` → `plugin_manager set_plugin target="include:skill-desc-zh" enabled=false`；彻底移除先 restore 再 `remove_bundle`；删除/覆盖只走 `trash.mjs`。
+
+### 9. 终审
+
+**verdict：pass（源码级）**。F1R 关闭、F1/F2 不回归、全量回归与只读安全通过；仅真实 GUI/remote 待重启人工验收。

@@ -38,7 +38,7 @@ check('package name', () => {
 })
 
 check('package version', () => {
-  if (pkg.version !== '0.6.0') throw new Error(`expected 0.6.0, got ${pkg.version}`)
+  if (pkg.version !== '0.7.0') throw new Error(`expected 0.7.0, got ${pkg.version}`)
   return pkg.version
 })
 
@@ -66,8 +66,15 @@ check('client entry id', () => {
 check('client factory', () => {
   if (!/factory\s*\(\s*require\s*\)/u.test(client)) throw new Error('factory(require) missing')
   if (!/module\.exports\s*=\s*\{/u.test(client)) throw new Error('module.exports missing')
-  if (!/inject:\s*\[\s*'slots'\s*,\s*'locale'\s*\]/u.test(client)) throw new Error('inject must be slots+locale')
-  return 'factory + exports + inject'
+  const injectMatch = client.match(/inject:\s*\[([^\]]*)\]/u)
+  if (!injectMatch) throw new Error('inject array missing')
+  const injected = [...injectMatch[1].matchAll(/'([^']+)'/gu)].map((match) => match[1])
+  const allowed = new Set(['slots', 'locale'])
+  const unexpectedInject = injected.filter((name) => !allowed.has(name))
+  if (unexpectedInject.length) throw new Error(`unexpected inject: ${unexpectedInject.join(', ')}`)
+  if (!injected.includes('slots') || !injected.includes('locale')) throw new Error('inject must include slots+locale')
+  if (!injected.includes('slots') || !injected.includes('locale')) throw new Error('inject must be slots+locale')
+  return `inject: ${injected.join('+')}`
 })
 
 check('require allowlist', () => {
@@ -88,6 +95,17 @@ check('single settings slot', () => {
   return 'settings.section order 16 (single)'
 })
 
+check('settings icon slot', () => {
+  const injections = client.match(/ctx\.slots\.inject\('settings\.section\.icon'/gu) || []
+  if (injections.length !== 1) throw new Error(`expected exactly one settings.section.icon injection, got ${injections.length}`)
+  if (!/name:\s*'settings\.section\.icon'/u.test(client)) throw new Error('icon slot name missing')
+  if (!/id:\s*'skill-desc-zh'/u.test(client)) throw new Error('icon slot id must equal skill-desc-zh')
+  if (!/props\.active/u.test(client) || !/props\.size/u.test(client)) throw new Error('icon must follow active/size props')
+  if (!/--dsw-alias-brand-primary/u.test(client)) throw new Error('icon must use theme alias variables')
+  if (!client.includes("'译'")) throw new Error('icon must render 译')
+  return 'settings.section.icon id skill-desc-zh + active/size + 译'
+})
+
 check('tabs', () => {
   if (!/TAB_STORAGE_KEY\s*=\s*'dsh-skill-desc-zh\.activeTab'/u.test(client)) throw new Error('tab storage key missing')
   if (!/id:\s*'translate'[\s\S]*?id:\s*'plugins'[\s\S]*?id:\s*'skills'/u.test(client)) throw new Error('TABS ids missing')
@@ -100,6 +118,19 @@ check('tabs', () => {
   return 'one tablist + 3 tabs + tabpanel; active-only aria-controls; Boundary key=active'
 })
 
+check('plugin index view', () => {
+  for (const marker of ['PluginIndexView', 'PluginIndexRow', 'INDEX_I18N', 'listIndexes', 'pluginMarket', 'plugin-market/changed', 'plugin-manager/changed', 'connection/reset', "role: 'group'", 'aria-pressed']) {
+    if (!client.includes(marker)) throw new Error(`plugin index marker missing: ${marker}`)
+  }
+  if (!/indexSearchQuery/u.test(client) || !/fetchedAt/u.test(client)) throw new Error('index search query/fetchedAt missing')
+  if (!/mergeIndexEntries/u.test(client)) throw new Error('index dedupe helper missing')
+  if (!/loading:\s*'lazy'/u.test(client) || !/referrerpolicy:\s*'no-referrer'/u.test(client)) throw new Error('index icon lazy/no-referrer missing')
+  if (client.includes('dangerouslySetInnerHTML')) throw new Error('index/third-party text must not use dangerouslySetInnerHTML')
+  if (!/sdzh-index-skeleton/u.test(client)) throw new Error('index skeleton missing')
+  if (!/sdzh-index-degraded|plugins\.index\.unavailable/u.test(client)) throw new Error('index degradation message missing')
+  return 'PluginIndexView + remote.pluginMarket + events + read-only UI'
+})
+
 check('skill admin api', () => {
   for (const api of ['listSkills', 'getSkillDetail', 'skillAction']) {
     if (!client.includes(api + ':')) throw new Error(`api method missing: ${api}`)
@@ -108,8 +139,8 @@ check('skill admin api', () => {
 })
 
 check('page version', () => {
-  if (!/PAGE_VERSION\s*=\s*'0\.6\.0'/u.test(client)) throw new Error('PAGE_VERSION must be 0.6.0')
-  return '0.6.0'
+  if (!/PAGE_VERSION\s*=\s*'0\.7\.0'/u.test(client)) throw new Error('PAGE_VERSION must be 0.7.0')
+  return '0.7.0'
 })
 
 check('feature pages and APIs', () => {
@@ -147,6 +178,13 @@ check('locale key parity', () => {
     'plugins.nav', 'plugins.title', 'plugins.check', 'plugins.update', 'plugins.updating',
     'plugins.stateAvailable', 'plugins.stateLatest', 'plugins.noticeSuccess', 'plugins.dialogTitle',
     'plugins.dialogBody', 'plugins.source.npm', 'plugins.colName', 'plugins.hostManager',
+    'plugins.index.switch.label', 'plugins.index.switch.installed', 'plugins.index.switch.index',
+    'plugins.index.sources.label', 'plugins.index.sources.empty', 'plugins.index.search.placeholder',
+    'plugins.index.loading', 'plugins.index.loadMore', 'plugins.index.empty', 'plugins.index.total',
+    'plugins.index.status.not-installed', 'plugins.index.status.installed',
+    'plugins.index.status.update-available', 'plugins.index.compat.incompatible',
+    'plugins.index.detail.versions', 'plugins.index.error.sources', 'plugins.index.error.search',
+    'plugins.index.unavailable', 'plugins.index.detail.installHint'
   )
   const inlineSkills = [...client.matchAll(/\['(skills\.[^']+)'/gu)].map((match) => match[1])
   if (inlineSkills.length < 80) throw new Error(`expected >=80 inline skill keys, got ${inlineSkills.length}`)
@@ -156,8 +194,14 @@ check('locale key parity', () => {
   if (absent.length) throw new Error(`missing required keys: ${absent.join(', ')}`)
   const skillTotal = zhKeys.filter((key) => key.startsWith('skills.')).length
   if (skillTotal < 80) throw new Error(`expected >=80 skill locale keys, got ${skillTotal}`)
-  if (zhKeys.length !== 298) throw new Error(`expected exactly 298 locale keys, got ${zhKeys.length}`)
-  return `${zhKeys.length} keys (${inlineSkills.length} skill keys)`
+  const inlineIndex = [...new Set([...client.matchAll(/\['(plugins\.index\.[^']+)'/gu)].map((match) => match[1]))]
+  if (inlineIndex.length < 40) throw new Error(`expected >=40 inline plugin index keys, got ${inlineIndex.length}`)
+  const absentIndex = inlineIndex.filter((key) => !(key in zh) || !(key in en))
+  if (absentIndex.length) throw new Error(`inline index keys missing from locale: ${absentIndex.slice(0, 8).join(', ')}`)
+  const indexTotal = zhKeys.filter((key) => key.startsWith('plugins.index.')).length
+  if (indexTotal !== inlineIndex.length) throw new Error(`index locale keys mismatch: inline ${inlineIndex.length}, locale ${indexTotal}`)
+  if (zhKeys.length !== 345) throw new Error(`expected exactly 345 locale keys, got ${zhKeys.length}`)
+  return `${zhKeys.length} keys (${inlineSkills.length} skill + ${inlineIndex.length} index keys)`
 })
 
 check('icon', () => {

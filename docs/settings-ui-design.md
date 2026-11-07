@@ -494,7 +494,7 @@ window.__ModuleLoader__.load({
 
 ```
 ┌─ 设置 › 技能中文化 ──────────────────────────────────────────────── [关闭] ┐
-│  技能描述中文化                                          ● 已生效 (active) │
+│  描述汉化                                          ● 已生效 (active) │
 │  把内置技能与斜杠命令的描述翻译成中文；随时可还原英文。                        │
 ├───────────────────────────────────────────────────────────────────────────┤
 │  ┌ 状态 ──────────────────────────────────────────────────────────────┐   │
@@ -920,7 +920,7 @@ A6 若因 inspect 超时无法执行，必须在 `verification` 文档中写明�
   "lastAction": { "action": "refresh", "ok": true, "at": 1761123000000 },
   "state": {
     "ok": true,
-    "summary": "技能描述中文化已生效（phase=active）：中文 12/12；命令 3/3；项目 /Applications/dsh；宿主 0.2.1-rc.2",
+    "summary": "描述汉化已生效（phase=active）：中文 12/12；命令 3/3；项目 /Applications/dsh；宿主 0.2.1-rc.2",
     "enabled": true, "restored": false, "ready": true,
     "phase": "active", "phaseReason": "12 项中文全部生效",
     "hostVersion": "0.2.1-rc.2",
@@ -947,7 +947,7 @@ A6 若因 inspect 超时无法执行，必须在 `verification` 文档中写明�
 | key | zh | en |
 |-----|----|----|
 | `nav` | 技能中文化 | Skills (zh) |
-| `title` | 技能描述中文化 | Skill descriptions in Chinese |
+| `title` | 描述汉化 | Skill descriptions in Chinese |
 | `subtitle` | 把内置技能与斜杠命令的描述翻译成中文；随时可还原英文。 | Built-in skill and slash-command descriptions in Chinese, restorable at any time. |
 | `phase.active` | 已生效 | Active |
 | `phase.degraded` | 部分降级 | Degraded |

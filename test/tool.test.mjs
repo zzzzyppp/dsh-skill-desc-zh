@@ -33,7 +33,7 @@ test('工具元数据符合宿主 dsh-tools 契约', () => {
   const present = tool.presentCall({ action: 'apply' })
   assert.deepEqual(present, {
     card: 'generic',
-    title: '技能描述中文化',
+    title: '描述汉化',
     kind: 'skill-desc-zh',
     rawInput: { action: 'apply' },
   })

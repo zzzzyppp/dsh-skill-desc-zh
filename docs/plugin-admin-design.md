@@ -144,7 +144,7 @@ lib/index.js（controller.plugins，只读）     lib/plugin-admin.js（createPl
 - `pluginManager` 不可用（旧进程未加载 / 服务缺失）：页面显示“需重启加载 0.4.0 且宿主服务不可用”，列表空态 + 原因，不抛异常。
 - profile 解析失败：页面显示原因；不猜测写入路径。
 - registry 全不可达：列表照常（无 latest），提示网络问题。
-- 客户端页面加载失败：仅影响设置页，技能描述中文化（host provider/影子）不受影响；可用禁用 bundle 回滚。
+- 客户端页面加载失败：仅影响设置页，描述汉化（host provider/影子）不受影响；可用禁用 bundle 回滚。
 - 更新失败：宿主侧回滚由 pluginManager 负责；本页只报告，不写 profile。
 
 ## 10. 测试与验收
@@ -165,7 +165,7 @@ lib/index.js（controller.plugins，只读）     lib/plugin-admin.js（createPl
 
 ## 12. 回滚
 
-- 功能级回滚：不改动 `cordis.patch.yml` 与 profile 依赖；如页面异常可仅在宿主「设置 → 插件」页禁用 bundle（或 `include:skill-desc-zh` 行），技能描述中文化随之停止。
+- 功能级回滚：不改动 `cordis.patch.yml` 与 profile 依赖；如页面异常可仅在宿主「设置 → 插件」页禁用 bundle（或 `include:skill-desc-zh` 行），描述汉化随之停止。
 - 文件级回滚：所有文档/配置覆盖前均有 `trash.mjs --snapshot`；代码回滚可回退到 v0.3.0 文件（无迁移，state 仍为 v2，向后兼容）。
 - 更新本身失败由宿主负责回滚；本页不写 profile，无额外回滚面。
 

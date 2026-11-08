@@ -16,8 +16,7 @@
 
       var NS = 'skill-desc-zh';
       var API_BASE = '/plugins/skill-desc-zh';
-      var PAGE_ORDER = 16;
-      var PAGE_VERSION = '0.7.0';
+      var PAGE_VERSION = '0.7.1';
       var ACTIONS = ['apply', 'restore', 'refresh', 'retranslate', 'doctor'];
       var TAB_STORAGE_KEY = 'dsh-skill-desc-zh.activeTab';
       var TABS = [
@@ -3318,37 +3317,6 @@
       }
 
 
-      /**
-       * 设置侧边栏「描述汉化」图标（0.2.2 settings.section.icon 槽）。
-       * 跟随 active 与主题色；尺寸按槽传入的 size 适配 25–40px。
-       */
-      function BetterSkillIcon(props) {
-        var size = typeof props.size === 'number' && isFinite(props.size) ? Math.max(25, Math.min(40, props.size)) : 28;
-        var color = props.active ? 'var(--dsw-alias-brand-primary, currentColor)' : 'var(--dsw-alias-label-primary, currentColor)';
-        return h('svg', {
-          xmlns: 'http://www.w3.org/2000/svg',
-          width: size,
-          height: size,
-          viewBox: '0 0 28 28',
-          fill: 'none',
-          'aria-hidden': 'true',
-          focusable: 'false',
-          style: { display: 'block', color: color }
-        },
-          h('rect', {
-            x: 1.5, y: 1.5, width: 25, height: 25, rx: 7,
-            stroke: 'currentColor', strokeWidth: 1.5,
-            fill: props.active ? 'var(--dsw-alias-bg-layer-2, transparent)' : 'transparent',
-            opacity: props.active ? 1 : 0.85
-          }),
-          h('text', {
-            x: 14, y: 19, textAnchor: 'middle',
-            fontSize: 14.5, fontWeight: 600, fontFamily: 'system-ui, -apple-system, sans-serif',
-            fill: 'currentColor'
-          }, '译')
-        );
-      }
-
       function apply(ctx) {
         try {
           ctx.effect(function () {
@@ -3358,13 +3326,12 @@
           ctx.effect(function () {
             return installPluginMarketBridge(ctx);
           }, 'skill-desc-zh: plugin-market events');
-          ctx.slots.inject('settings.section', function () {
+          ctx.slots.inject('plugins.tab', function () {
             return ctx.slots.register({
-              name: 'settings.section',
+              name: 'plugins.tab',
               id: 'skill-desc-zh',
-              order: PAGE_ORDER,
-              label: function () { return t('nav'); },
-              locale: NS
+              order: 20,
+              label: function () { return t('nav'); }
             }, function BetterSkillPanel(props) {
               return h(BetterSkillPage, Object.assign({}, props, { t: props.t || t, ctx: ctx }));
             });
@@ -3381,7 +3348,6 @@
         __test__: {
           NS: NS,
           API_BASE: API_BASE,
-          PAGE_ORDER: PAGE_ORDER,
           PAGE_VERSION: PAGE_VERSION,
           TAB_STORAGE_KEY: TAB_STORAGE_KEY,
           TAB_IDS: TAB_IDS,
@@ -3400,7 +3366,6 @@
           errorInfo: errorInfo,
           phaseToken: phaseToken,
           translate: translate,
-          BetterSkillIcon: BetterSkillIcon,
           IndexIcon: IndexIcon,
           BetterSkillPage: BetterSkillPage,
           SettingsPage: SettingsPage,

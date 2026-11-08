@@ -38,7 +38,7 @@ check('package name', () => {
 })
 
 check('package version', () => {
-  if (pkg.version !== '0.7.0') throw new Error(`expected 0.7.0, got ${pkg.version}`)
+  if (pkg.version !== '0.7.1') throw new Error(`expected 0.7.1, got ${pkg.version}`)
   return pkg.version
 })
 
@@ -84,15 +84,17 @@ check('require allowlist', () => {
   return requests.join(', ') || 'none'
 })
 
-check('single settings slot', () => {
-  const injections = client.match(/ctx\.slots\.inject\('settings\.section'/gu) || []
-  if (injections.length !== 1) throw new Error(`expected exactly one settings.section injection, got ${injections.length}`)
-  if (!/order:\s*PAGE_ORDER/u.test(client) || !/PAGE_ORDER\s*=\s*16/u.test(client)) throw new Error('settings order must be PAGE_ORDER=16')
+check('plugins tab injection', () => {
+  const injections = client.match(/ctx\.slots\.inject\('plugins\.tab'/gu) || []
+  if (injections.length !== 1) throw new Error(`expected exactly one plugins.tab injection, got ${injections.length}`)
+  if (client.includes('settings.section')) throw new Error('settings.section residual must be removed')
+  if (!/name:\s*'plugins\.tab'/u.test(client)) throw new Error('plugins.tab slot name missing')
+  if (!/id:\s*'skill-desc-zh'/u.test(client)) throw new Error('plugins.tab slot id missing')
+  if (!/order:\s*20/u.test(client)) throw new Error('plugins.tab order must be 20')
   if (!/label:\s*function\s*\(\s*\)\s*\{\s*return\s+t\('nav'\)/u.test(client)) throw new Error('locale-aware label thunk missing')
-  if (!/locale:\s*NS/u.test(client)) throw new Error('slot locale missing')
+  if (client.includes('PAGE_ORDER') || client.includes('BetterSkillIcon')) throw new Error('PAGE_ORDER/BetterSkillIcon residual must be removed')
   if (client.includes("id: 'plugin-admin'") || client.includes("id: 'skill-admin'")) throw new Error('extra admin slots must be removed')
-  if (client.includes('ADMIN_ORDER') || client.includes('SKILL_ORDER')) throw new Error('ADMIN_ORDER/SKILL_ORDER must be removed')
-  return 'settings.section order 16 (single)'
+  return 'plugins.tab id=skill-desc-zh order=20 (single)'
 })
 
 check('tabs', () => {
@@ -128,8 +130,8 @@ check('skill admin api', () => {
 })
 
 check('page version', () => {
-  if (!/PAGE_VERSION\s*=\s*'0\.7\.0'/u.test(client)) throw new Error('PAGE_VERSION must be 0.7.0')
-  return '0.7.0'
+  if (!/PAGE_VERSION\s*=\s*'0\.7\.1'/u.test(client)) throw new Error('PAGE_VERSION must be 0.7.1')
+  return '0.7.1'
 })
 
 check('feature pages and APIs', () => {

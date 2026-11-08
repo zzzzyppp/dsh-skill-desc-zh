@@ -2043,3 +2043,106 @@ F2 compatibleTrue null
 ### 9. 终审
 
 **verdict：pass（源码级）**。F1R 关闭、F1/F2 不回归、全量回归与只读安全通过；仅真实 GUI/remote 待重启人工验收。
+
+---
+
+## 追加（v0.7.1 入口迁移，2026-11-08）：t45 独立验收
+
+### 0. 结论
+
+**verdict：pass（源码级，可进入 t46 文档）**。
+
+t44 将 Better Skill 从 `settings.section` 迁移到 `plugins.tab`：本任务独立复核了入口契约、启动失败路径、全量回归、独立 `ModuleLoader` 探针与永久删除扫描，未发现阻断项。真实 DSH 插件页 Tab 渲染、设置侧栏消失、三个内层 Tab 记忆、locale 切换与重启后启动成功仍未验证，统一标为“待重启人工验收”。
+
+本轮只写本文档；未改生产代码/package/locale/tests，未安装/升级/重启，未 commit，无永久删除。改动前快照：`/Users/ypz/.dsh/.file-backups/2026-11-08T12-19-25-298Z/verification.md`。
+
+### 1. 契约复核（A1–A3）
+
+**A1：唯一 `plugins.tab` 注册**
+
+- `client.js:3329-3338`：
+  `ctx.slots.inject('plugins.tab', function () { return ctx.slots.register({ name: 'plugins.tab', id: 'skill-desc-zh', order: 20, label: function () { return t('nav'); } }, function BetterSkillPanel(props) { ... }) })`。
+- 独立探针断言：`injected === ['plugins.tab']`、`slots.length === 1`、`name=plugins.tab`、`id=skill-desc-zh`、`order=20`、`label` 为 function 且返回 `Better Skill`。
+- 宿主 0.2.2-rc.1 的 slot 声明：`app.asar/dsh/node_modules/@deepseek-ai/dsh-client-ui-plugin-manager/lib/client.js:7764-7767` 为 `plugins.tab: { kind: 'list', scope: 'root' }`；`:7236-7246` `renderSlot('plugins.tab', { install, openPackage }, { only: tab })`；`:7639` 用 `resolveSlotLabel(entry.options.label)` 投影 label thunk。与 t44 的实现一致。
+
+**A2：旧入口/旧 id/死代码清除**
+
+- `grep -RIn 'settings.section|PAGE_ORDER|BetterSkillIcon' client.js package.json test scripts locale`：生产代码 0 命中；仅 `scripts/check-client.mjs:90/95` 保留**负向断言**（if includes → 报错）。
+- `grep "id: 'plugin-admin'|id: 'skill-admin'"`：生产/test 0 命中；仅 `check-client.mjs:96` 负向断言。
+- 不再有 `BetterSkillIcon`、`PAGE_ORDER`、`ADMIN_ORDER`/`SKILL_ORDER`。
+
+**A3：inject / 生命周期 / 启动配置**
+
+- `client.js:3346` `inject: ['slots', 'locale']`；无新增 `remote`/`pluginManager` 等必需服务。
+- `apply()` 外层 `try/catch`（`client.js:3320-3343`）：异常时 `console.error` + `window.__SDZH_CLIENT_ERROR__`，不向宿主抛出；`installPluginMarketBridge` 对缺失 `ctx.remote` 仍返回 no-op。
+- `package.json`：`dsh.client = { platform: 'web' }`，**无 `immediately`**；`dependencies`/`peerDependencies` 均为空。
+- `PAGE_VERSION='0.7.1'`；`check-client` 断言 package 版本 0.7.1、单入口、order 20。
+
+### 2. 独立启动探针
+
+`/tmp/t45-plugin-tab-probe.mjs`（生产 `client.js` + fake `ModuleLoader`/React/slots/locale/remote，不改仓库）：
+
+```text
+PLUGINS_TAB_PROBE PASS
+{
+  "injected": ["plugins.tab"],
+  "spec": { "name": "plugins.tab", "id": "skill-desc-zh", "order": 20,
+            "labelType": "function", "label": "Better Skill" },
+  "exportsInject": ["slots", "locale"],
+  "errorMarker": "TypeError: Cannot read properties of undefined (reading 'inj...')"
+}
+```
+
+`/tmp/t45-startup-probe.mjs`（缺失 slots / slot 未声明 / effect 抛错 / 有 remote 四种路径）：
+
+```text
+STARTUP_PROBE {"normal":{"injected":["plugins.tab"],"slots":1,"label":"Better Skill"},
+"noSlots":{"threw":false,"marker":true},
+"slotAbsent":{"threw":false,"slots":0},
+"effectThrows":{"threw":false,"marker":true}}
+```
+
+结论：`apply()` 在 slots 缺失、slot 未声明、`ctx.effect` 抛错三种启动异常下都不向宿主抛出，并设置错误标记；正常路径只注册一个 `plugins.tab`。未发现启动期新增依赖或立即执行路径。
+
+### 3. 全量回归（原始输出摘要）
+
+| 命令 | 结果 |
+| --- | --- |
+| `npm test` | tests **229** / pass **229** / fail **0**；duration 722.65ms（Node v24.20.0） |
+| `node scripts/check-client.mjs` | **18 checks passed**（t44 将原 18 项中的 single settings slot 一对一替换为 plugins tab injection，数量仍 18；要求 ≥17） |
+| `node scripts/skills-e2e.mjs` | **32/32** |
+| `node scripts/plugin-admin-e2e.mjs` | **21/21** |
+| `npm run e2e:commands` | **10/10** |
+| `npm run e2e:agent-layer` | **7/7** |
+| `node --check`（client.js + scripts/*.mjs） | **12 files / 0 failures**；另全量 lib/scripts/test/client.js **49 files / 0 failures** |
+| `node scripts/verify.mjs --expect-installed --expect-applied` | exit 0；**49 files** 无永久删除；trash 通道；4 个影子标记；profile link+bundle；state hostVersion 0.2.2-rc.1 / skills 12 |
+
+### 4. A 表
+
+| 项 | 状态 | 说明 |
+| --- | --- | --- |
+| A1 唯一 `plugins.tab` 契约 | pass | name/id/order=20/label thunk；宿主 list/root 声明与 renderSlot ownerProps 已核对 |
+| A2 旧入口/id/死代码 | pass | 无 `settings.section`、无 plugin-admin/skill-admin id、无 `PAGE_ORDER`/`BetterSkillIcon`；仅 check-client 负向断言 |
+| A3 inject/启动配置 | pass | `['slots','locale']`；无 immediately；无新增 deps；apply try/catch |
+| A4 启动风险探针 | pass | 缺失 slots/slot 未声明/effect 抛错均被捕获；正常仅注册一次 |
+| A5 全量回归 | pass | 229/18/32/21/10/7/49；verify exit 0 |
+| A6 独立探针 | pass | `PLUGINS_TAB_PROBE PASS` + `STARTUP_PROBE` 四路径 |
+| A7 永久删除/安装副作用 | pass | 49 文件扫描无命中；未改 profile/未安装 |
+| A8 真实 GUI 与重启 | 待重启（未验证） | 真实插件页 Tab 渲染、设置侧栏无独立入口、三内层 Tab/localStorage/locale、重启启动成功 |
+
+### 5. 未验证 / 待重启
+
+1. 真实 DSH 设置 → 插件页出现「Better Skill」Tab（位于「发现」之后），点击渲染三个内层 Tab；设置侧栏不再出现独立入口。
+2. `localStorage` 三内层 Tab 记忆与 locale 切换后的 label/文案。
+3. 重启后插件页可用、无启动错误、无 `__SDZH_CLIENT_ERROR__`/崩溃回滚。
+4. 上述未在真实 GUI 发生，**不写成已验证**；不把源码探针等同于真实渲染。
+
+### 6. 回滚
+
+- 本文档改动前快照：`/Users/ypz/.dsh/.file-backups/2026-11-08T12-19-25-298Z/verification.md`；恢复用 `trash.mjs --snapshot` 留档后覆盖，或直接用快照。
+- 插件层：`skill_desc_zh(action="restore")` → `plugin_manager set_plugin target="include:skill-desc-zh" enabled=false`；彻底移除先 restore 再 `remove_bundle`。
+- 回退入口迁移：`git checkout 4e332de -- client.js package.json test/client.test.mjs scripts/check-client.mjs`（若使用 git；当前工作区存在未提交 v0.7 改动时先备份），或使用改动前快照；禁止 `rm`，删除只走 `trash.mjs`。
+
+### 7. 终审
+
+**verdict：pass（源码级）**。A1–A7 通过，A8 保持待重启；可进入 t46 文档更新。t44 的 check-client 18（非 19）是 18 项中一对一替换，不是少做检查。

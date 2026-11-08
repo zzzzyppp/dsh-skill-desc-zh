@@ -1,6 +1,6 @@
 {
   "name": "dsh-skill-desc-zh",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "private": true,
   "description": "把 DSH 技能与斜杠命令描述自动翻译为中文，并在设置页管理技能、插件索引与第三方插件（技能 CRUD、禁用、回收站、检查更新）",
   "type": "module",
@@ -30,8 +30,7 @@
       "patch": "./cordis.patch.yml"
     },
     "client": {
-      "platform": "web",
-      "immediately": true
+      "platform": "web"
     }
   },
   "scripts": {

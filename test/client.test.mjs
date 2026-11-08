@@ -107,23 +107,21 @@ const plugin = registration.factory((request) => {
 })
 const internals = plugin.__test__
 
-test('client 注册：id、factory、注入与设置页 slot', () => {
+test('client 注册：id、factory、注入与 plugins.tab 入口', () => {
   assert.equal(registration.id, 'dsh-skill-desc-zh')
   assert.deepEqual(plugin.inject, ['slots', 'locale'])
   assert.equal(typeof plugin.apply, 'function')
-  assert.equal(internals.PAGE_ORDER, 16)
+  assert.equal(internals.PAGE_VERSION, '0.7.1')
   const env = makeCtx('zh')
   plugin.apply(env.ctx)
-  assert.deepEqual(env.calls.injected, ['settings.section'])
+  assert.deepEqual(env.calls.injected, ['plugins.tab'])
   assert.equal(env.calls.slots.length, 1)
-  const sectionEntry = env.calls.slots.find((entry) => entry.spec.name === 'settings.section')
-  assert.ok(sectionEntry)
-  const { spec, Component } = sectionEntry
-  assert.equal(spec.name, 'settings.section')
+  const entry = env.calls.slots[0]
+  const { spec, Component } = entry
+  assert.equal(spec.name, 'plugins.tab')
   assert.equal(spec.id, 'skill-desc-zh')
-  assert.equal(spec.order, 16)
-  assert.equal(spec.order, internals.PAGE_ORDER)
-  assert.equal(spec.locale, 'skill-desc-zh')
+  assert.equal(spec.order, 20)
+  assert.equal(spec.locale, undefined)
   assert.equal(spec.label(), 'Better Skill')
   assert.equal(typeof Component, 'function')
   env.setLocale('en')
@@ -132,17 +130,26 @@ test('client 注册：id、factory、注入与设置页 slot', () => {
   assert.equal(env.calls.effects[0], 'skill-desc-zh: locale')
 })
 
-test('settings.section.icon：译图标跟随 active/size 与主题变量', () => {
-  const passive = internals.BetterSkillIcon({ size: 20, active: false })
-  assert.equal(passive.type, 'svg')
-  assert.equal(passive.props.width, 25)
-  assert.equal(passive.props.height, 25)
-  assert.ok(String(passive.props.style.color).includes('--dsw-alias-label-primary'))
-  const active = internals.BetterSkillIcon({ size: 99, active: true })
-  assert.equal(active.props.width, 40)
-  assert.equal(active.props.height, 40)
-  assert.ok(String(active.props.style.color).includes('--dsw-alias-brand-primary'))
-  assert.equal(collectText(active).trim(), '译')
+test('plugins.tab Panel：渲染三内层 Tab 且默认 translate', () => {
+  const env = makeCtx('zh')
+  plugin.apply(env.ctx)
+  const entry = env.calls.slots[0]
+  const panel = entry.Component({})
+  assert.equal(panel.type, internals.BetterSkillPage)
+  assert.equal(panel.props.ctx, env.ctx)
+  assert.equal(typeof panel.props.t, 'function')
+  const tree = internals.BetterSkillPage(panel.props)
+  const tabbar = tree.props.children.find((child) => child.props && child.props.role === 'tablist')
+  assert.ok(tabbar)
+  const tabs = Array.isArray(tabbar.props.children[0]) ? tabbar.props.children[0] : tabbar.props.children
+  assert.equal(tabs.length, 3)
+  assert.deepEqual(tabs.map((tab) => tab.props.id), ['sdzh-tab-translate', 'sdzh-tab-plugins', 'sdzh-tab-skills'])
+  assert.equal(tabs[0].props['aria-selected'], 'true')
+  assert.equal(tabs[0].props['aria-controls'], 'sdzh-panel-translate')
+  const page = tree.props.children.find((child) => child.props && child.props.role === 'tabpanel')
+  assert.ok(page)
+  assert.equal(page.props.id, 'sdzh-panel-translate')
+  assert.equal(page.props.children[0].props.children[0].type, internals.SettingsPage)
 })
 
 test('locale 文件完整、zh/en key 一致、通过 DICT 校验', () => {
@@ -416,7 +423,7 @@ test('counts/engines 派生与 phase token', () => {
 
 test('manifest：version/exports/dsh.client/files/check 脚本', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'))
-  assert.equal(pkg.version, '0.7.0')
+  assert.equal(pkg.version, '0.7.1')
   assert.equal(pkg.exports['./client'], './client.js')
   assert.equal(pkg.exports['./locale/*.json'], './locale/*.json')
   assert.equal(pkg.dsh.client.platform, 'web')

@@ -10,6 +10,8 @@ import {
   API_PREFIX,
   API_SKILL_ACTIONS,
   API_SKILL_PATHS,
+  API_MARKET_PATHS,
+  API_SKILL_INDEX_PATHS,
   MAX_NAMES,
   SKILL_MAX_BODY_BYTES,
   parseSkillActionRequest,
@@ -981,4 +983,97 @@ test('K10 描述动作与技能动作互斥：技能动作进行中描述 POST 4
   gate.resolve()
   await pending
   api.dispose()
+})
+
+test('T20 插件索引路由：sources/search/install 参数透传与结果返回', async () => {
+  const server = createServer()
+  const calls = []
+  const pluginIndex = {
+    async sources() {
+      calls.push(['sources'])
+      return { ok: true, sources: [{ url: 'https://index.example/a.json', title: 'A' }] }
+    },
+    async search(input) {
+      calls.push(['search', input])
+      return { ok: true, entries: [], total: 0 }
+    },
+    async install(input) {
+      calls.push(['install', input])
+      return { ok: true, application: 'restart-required' }
+    }
+  }
+  const api = registerHttpApi({
+    server,
+    gate: () => authGate(undefined),
+    controller: fakeController(),
+    version: VERSION,
+    exists: () => true,
+    pluginIndex
+  })
+
+  const sources = await call(server, 'GET', API_MARKET_PATHS.sources)
+  assert.equal(sources.statusCode, 200)
+  assert.deepEqual(JSON.parse(sources.body).sources[0].title, 'A')
+
+  const search = await call(server, 'GET', `${API_MARKET_PATHS.search}?url=${encodeURIComponent('https://index.example/a.json')}&q=demo&offset=20&limit=10&refresh=1`)
+  assert.equal(search.statusCode, 200)
+  assert.deepEqual(calls[1], ['search', { url: 'https://index.example/a.json', text: 'demo', offset: '20', limit: '10', refresh: true }])
+
+  const install = await call(server, 'POST', API_MARKET_PATHS.install, {
+    body: { url: 'https://index.example/a.json', name: 'demo-plugin', version: '1.0.0' }
+  })
+  assert.equal(install.statusCode, 200)
+  assert.equal(JSON.parse(install.body).result.application, 'restart-required')
+  assert.deepEqual(calls[2], ['install', { url: 'https://index.example/a.json', name: 'demo-plugin', version: '1.0.0' }])
+
+  const missing = await call(server, 'POST', API_MARKET_PATHS.install, { body: { url: 'https://index.example/a.json' } })
+  assert.equal(missing.statusCode, 400)
+  api.dispose()
+})
+
+test('T21 技能索引路由：search/install 透传；服务缺失时 503', async () => {
+  const server = createServer()
+  const calls = []
+  const skillHub = {
+    async search(input) {
+      calls.push(['search', input])
+      return { ok: true, entries: [{ slug: 'demo-notes' }] }
+    },
+    async install(input) {
+      calls.push(['install', input])
+      return { ok: true, name: 'demo-notes' }
+    }
+  }
+  const api = registerHttpApi({
+    server,
+    gate: () => authGate(undefined),
+    controller: fakeController(),
+    version: VERSION,
+    exists: () => true,
+    skillHub
+  })
+  const search = await call(server, 'GET', `${API_SKILL_INDEX_PATHS.search}?q=notes&page=2&pageSize=20`)
+  assert.equal(search.statusCode, 200)
+  assert.deepEqual(calls[0], ['search', { text: 'notes', page: '2', pageSize: '20' }])
+
+  const install = await call(server, 'POST', API_SKILL_INDEX_PATHS.install, { body: { slug: 'demo-notes', force: true } })
+  assert.equal(install.statusCode, 200)
+  assert.deepEqual(calls[1], ['install', { slug: 'demo-notes', force: true }])
+
+  const emptyQuery = await call(server, 'GET', API_SKILL_INDEX_PATHS.search)
+  assert.equal(emptyQuery.statusCode, 200)
+  api.dispose()
+
+  const unavailable = createServer()
+  const noMarket = registerHttpApi({
+    server: unavailable,
+    gate: () => authGate(undefined),
+    controller: fakeController(),
+    version: VERSION,
+    exists: () => true
+  })
+  assert.equal((await call(unavailable, 'GET', API_MARKET_PATHS.sources)).statusCode, 503)
+  assert.equal((await call(unavailable, 'GET', API_SKILL_INDEX_PATHS.search)).statusCode, 503)
+  assert.equal((await call(unavailable, 'POST', API_SKILL_INDEX_PATHS.install, { body: { slug: 'x' } })).statusCode, 503)
+  noMarket.dispose()
 })

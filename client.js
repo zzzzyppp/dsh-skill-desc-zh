@@ -16,7 +16,7 @@
 
       var NS = 'skill-desc-zh';
       var API_BASE = '/plugins/skill-desc-zh';
-      var PAGE_VERSION = '0.7.1';
+      var PAGE_VERSION = '0.8.0';
       var ACTIONS = ['apply', 'restore', 'refresh', 'retranslate', 'doctor'];
       var TAB_STORAGE_KEY = 'dsh-skill-desc-zh.activeTab';
       var TABS = [
@@ -610,7 +610,7 @@
         ['plugins.index.switch.installed', '已安装', 'Installed'],
         ['plugins.index.switch.index', '插件索引', 'Plugin index'],
         ['plugins.index.title', '插件索引', 'Plugin index'],
-        ['plugins.index.subtitle', '只读浏览宿主「设置 → 插件 → 发现」里已配置的索引源；安装与源管理仍在原生页进行。', 'Browse the index sources configured under Settings → Plugins → Discover. Read-only; installation and source management stay in the native page.'],
+        ['plugins.index.subtitle', '浏览宿主「设置 → 插件 → 发现」里已配置的索引源，一键安装或更新；索引源管理仍在原生页。', 'Browse the index sources configured under Settings → Plugins → Discover and install or update entries. Source management stays in the native page.'],
         ['plugins.index.sources.label', '索引源', 'Index source'],
         ['plugins.index.sources.empty', '尚未配置插件索引源，请在 设置 → 插件 → 发现 中添加。', 'No plugin index source configured. Add one under Settings → Plugins → Discover.'],
         ['plugins.index.sources.refresh', '刷新索引', 'Refresh index'],
@@ -657,6 +657,43 @@
       for (var indexKey = 0; indexKey < INDEX_I18N.length; indexKey += 1) {
         DICT.zh[INDEX_I18N[indexKey][0]] = INDEX_I18N[indexKey][1];
         DICT.en[INDEX_I18N[indexKey][0]] = INDEX_I18N[indexKey][2];
+      }
+      var INSTALL_I18N = [
+        ['plugins.index.install', '安装', 'Install'],
+        ['plugins.index.install.busy', '安装中…', 'Installing…'],
+        ['plugins.index.install.update', '更新', 'Update'],
+        ['plugins.index.install.switch', '切换版本', 'Switch version'],
+        ['plugins.index.install.done', '已安装 {name}', 'Installed {name}'],
+        ['plugins.index.install.doneRestart', '已安装 {name}，重启 DSH 后生效', 'Installed {name}; restart DSH to apply'],
+        ['plugins.index.install.failed', '无法安装 {name}', 'Could not install {name}']
+      ];
+      for (var installKey = 0; installKey < INSTALL_I18N.length; installKey += 1) {
+        DICT.zh[INSTALL_I18N[installKey][0]] = INSTALL_I18N[installKey][1];
+        DICT.en[INSTALL_I18N[installKey][0]] = INSTALL_I18N[installKey][2];
+      }
+      var SKILL_INDEX_I18N = [
+        ['skills.indexView.label', '技能视图', 'Skill view'],
+        ['skills.indexView.local', '本地技能', 'Local skills'],
+        ['skills.indexView.index', '技能索引', 'Skill index'],
+        ['skills.index.title', '技能索引', 'Skill index'],
+        ['skills.index.subtitle', '从 SkillHub 搜索技能并安装到 ~/.dsh/skills；覆盖安装前自动留档。', 'Search SkillHub and install skills into ~/.dsh/skills; snapshots are kept before overwrite.'],
+        ['skills.index.search', '搜索技能名称或描述', 'Search skill name or description'],
+        ['skills.index.searchGo', '搜索', 'Search'],
+        ['skills.index.downloads', '{count} 次下载', '{count} downloads'],
+        ['skills.index.installs', '{count} 次安装', '{count} installs'],
+        ['skills.index.install', '安装', 'Install'],
+        ['skills.index.install.busy', '安装中…', 'Installing…'],
+        ['skills.index.install.force', '覆盖安装', 'Overwrite install'],
+        ['skills.index.install.done', '已安装 {name} → {dir}', 'Installed {name} → {dir}'],
+        ['skills.index.install.failed', '安装失败', 'Install failed'],
+        ['skills.index.failed', '无法加载技能索引', 'Could not load skill index'],
+        ['skills.index.retry', '重试', 'Retry'],
+        ['skills.index.empty', '没有找到匹配的技能', 'No matching skills'],
+        ['skills.index.hint', '共 {total} 个技能；安装后技能目录会热刷新，删除请到「本地技能」。', '{total} skills; the catalog refreshes after install. Remove them under Local skills.']
+      ];
+      for (var skillIndexKey = 0; skillIndexKey < SKILL_INDEX_I18N.length; skillIndexKey += 1) {
+        DICT.zh[SKILL_INDEX_I18N[skillIndexKey][0]] = SKILL_INDEX_I18N[skillIndexKey][1];
+        DICT.en[SKILL_INDEX_I18N[skillIndexKey][0]] = SKILL_INDEX_I18N[skillIndexKey][2];
       }
 
       function translate(locale, key, params) {
@@ -783,6 +820,42 @@
               method: 'POST',
               headers: { 'content-type': 'application/json' },
               body: JSON.stringify({ action: 'update', name: name }),
+              signal: opts.signal
+            });
+          },
+          marketSources: function (options) {
+            var opts = options || {};
+            return request('/market/sources', opts.signal ? { signal: opts.signal } : undefined);
+          },
+          searchMarket: function (url, text, options) {
+            var opts = options || {};
+            var params = ['url=' + encodeURIComponent(url || ''), 'q=' + encodeURIComponent(text || '')];
+            if (opts.offset) params.push('offset=' + encodeURIComponent(opts.offset));
+            if (opts.limit) params.push('limit=' + encodeURIComponent(opts.limit));
+            if (opts.refresh) params.push('refresh=1');
+            return request('/market/search?' + params.join('&'), opts.signal ? { signal: opts.signal } : undefined);
+          },
+          installMarketPlugin: function (payload, options) {
+            var opts = options || {};
+            return request('/market/install', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify(payload || {}),
+              signal: opts.signal
+            });
+          },
+          searchSkillHub: function (text, page, options) {
+            var opts = options || {};
+            var params = ['q=' + encodeURIComponent(text || ''), 'page=' + encodeURIComponent(page || 1)];
+            if (opts.pageSize) params.push('pageSize=' + encodeURIComponent(opts.pageSize));
+            return request('/skill-index/search?' + params.join('&'), opts.signal ? { signal: opts.signal } : undefined);
+          },
+          installSkillHub: function (slug, force, options) {
+            var opts = options || {};
+            return request('/skill-index/install', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ slug: slug, force: force === true }),
               signal: opts.signal
             });
           }
@@ -919,6 +992,9 @@
 
       var CSS = [
         '.sdzh-page{display:flex;flex-direction:column;gap:14px;max-width:100%;color:var(--dsw-alias-label-primary);font-size:13px;line-height:1.5}',
+        '.sdzh-panel-root{height:100%;min-height:0;overflow:auto;padding:24px 28px 40px;background:var(--dsw-alias-bg-base)}',
+        '.sdzh-panel-icon{display:inline-flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font-weight:600;line-height:1}',
+        '.sdzh-panel-icon.is-active{color:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary)}',
         '.sdzh-page *{box-sizing:border-box}',
         '.sdzh-page-tabs{gap:0}',
         '.sdzh-page-tabbar{display:flex;gap:6px;border-bottom:1px solid var(--dsw-alias-border-l2);margin-bottom:14px}',
@@ -1524,6 +1600,13 @@
         var registry = version && version.install ? version.install.registry : '';
         var homepage = indexHref(entry.homepage);
         var repository = indexHref(entry.repository);
+        var installStatus = entry.installation && entry.installation.status;
+        var canInstall = Boolean(spec) && (installStatus === 'not-installed'
+          || installStatus === 'update-available'
+          || installStatus === 'different-version');
+        var installLabel = installStatus === 'update-available'
+          ? t('plugins.index.install.update')
+          : (installStatus === 'different-version' ? t('plugins.index.install.switch') : t('plugins.index.install'));
         return h('div', { className: 'sdzh-index-row', 'data-name': entry.name || '' },
           h('div', { className: 'sdzh-index-main' },
             h(IndexIcon, { src: entry.icon, name: title }),
@@ -1541,6 +1624,15 @@
                 compatibility.detail ? h('span', { className: 'sdzh-muted' }, compatibility.detail) : null
               ) : null
             ),
+            canInstall ? h('button', {
+              type: 'button',
+              className: 'sdzh-button sdzh-button-primary sdzh-index-install',
+              disabled: props.installing === true,
+              onClick: function (event) {
+                event.stopPropagation();
+                if (typeof props.onInstall === 'function') props.onInstall(entry);
+              }
+            }, props.installing ? t('plugins.index.install.busy') : installLabel) : null,
             h('button', {
               type: 'button',
               className: 'sdzh-button sdzh-index-toggle',
@@ -1699,6 +1791,9 @@
         var queryRef = useRef('');
         var resultRef = useRef(null);
         var lastSubmitted = useRef('');
+        var api = useMemo(function () { return createApi(); }, []);
+        var [installing, setInstalling] = useState(null);
+        var [installNotice, setInstallNotice] = useState(null);
 
         function applyUrl(next) {
           urlRef.current = next || '';
@@ -1842,6 +1937,40 @@
           runSearch(urlRef.current, { reset: true, refresh: true });
         }
 
+        function installEntry(entry) {
+          if (!entry || !entry.name || installing) return;
+          var targetUrl = urlRef.current;
+          setInstalling(entry.name);
+          setInstallNotice(null);
+          void api.installMarketPlugin({
+            url: targetUrl,
+            name: entry.name,
+            version: entry.defaultVersion
+          }).then(function (payload) {
+            if (!alive.current) return;
+            var result = payload && payload.result ? payload.result : payload;
+            if (payload && payload.ok && result && result.ok !== false) {
+              setInstallNotice({
+                kind: 'success',
+                text: result.application === 'restart-required'
+                  ? t('plugins.index.install.doneRestart', { name: entry.name })
+                  : t('plugins.index.install.done', { name: entry.name })
+              });
+              if (urlRef.current) runSearch(urlRef.current, { reset: true, refresh: true });
+            } else {
+              var code = (result && result.code) || (payload && payload.error && payload.error.code);
+              var message = (result && result.message)
+                || (payload && payload.error && payload.error.message)
+                || t('plugins.index.install.failed', { name: entry.name });
+              setInstallNotice({ kind: 'warning', text: message + (code ? ' (' + code + ')' : '') });
+            }
+          }).catch(function (failure) {
+            if (alive.current) setInstallNotice({ kind: 'danger', text: (failure && failure.message) || String(failure) });
+          }).finally(function () {
+            if (alive.current) setInstalling(null);
+          });
+        }
+
         if (!market) {
           return h(Card, { title: t('plugins.index.title') },
             h(Banner, { tone: 'warning' }, t('plugins.index.unavailable'))
@@ -1917,6 +2046,7 @@
           h('div', { className: 'sdzh-index-status', role: 'status', 'aria-live': 'polite', 'aria-busy': busy ? 'true' : 'false' },
             busy ? t('plugins.index.loading') : t('plugins.index.total', { count: total })
           ),
+          installNotice ? h(Banner, { tone: installNotice.kind === 'success' ? 'info' : installNotice.kind }, installNotice.text) : null,
           searchError ? h(Banner, { tone: 'danger' },
             h('div', null,
               h('strong', null, t('plugins.index.error.search')),
@@ -1937,6 +2067,8 @@
                   t: t,
                   ctx: ctx,
                   expanded: expanded === entry.name,
+                  installing: installing === entry.name,
+                  onInstall: installEntry,
                   onToggle: function (name) { setExpanded(name); }
                 });
               }))
@@ -2432,6 +2564,140 @@
         );
       }
 
+      /**
+       * 技能索引：从 SkillHub 搜索并安装到 ~/.dsh/skills/<slug>。
+       * 网络与写盘全部在宿主侧完成，这里只做展示与用户确认。
+       */
+      function SkillIndexView(props) {
+        var t = typeof props.t === 'function'
+          ? props.t
+          : function (key, params) { return translate('zh', key, params); };
+        var api = useMemo(function () { return createApi(); }, []);
+        var [text, setText] = useState('');
+        var [data, setData] = useState(null);
+        var [state, setState] = useState('loading');
+        var [error, setError] = useState(null);
+        var [installing, setInstalling] = useState(null);
+        var [notice, setNotice] = useState(null);
+        var alive = useRef(true);
+        var seq = useRef(0);
+
+        function load(term) {
+          var current = seq.current + 1;
+          seq.current = current;
+          setState('loading');
+          setError(null);
+          void api.searchSkillHub(term || '', 1).then(function (payload) {
+            if (!alive.current || current !== seq.current) return;
+            setData(payload || {});
+            setState('ready');
+          }).catch(function (failure) {
+            if (!alive.current || current !== seq.current) return;
+            setError(failure && failure.message ? failure.message : String(failure));
+            setState('error');
+          });
+        }
+
+        useEffect(function () {
+          alive.current = true;
+          load('');
+          return function () {
+            alive.current = false;
+            seq.current += 1;
+          };
+        }, []);
+
+        function runInstall(entry, force) {
+          if (!entry || !entry.slug || installing) return;
+          setInstalling(entry.slug);
+          setNotice(null);
+          void api.installSkillHub(entry.slug, force === true).then(function (payload) {
+            if (!alive.current) return;
+            var result = payload && payload.result ? payload.result : payload;
+            if (payload && payload.ok && result && result.ok !== false) {
+              setNotice({ kind: 'success', text: t('skills.index.install.done', { name: result.name || entry.slug, dir: result.dir || '' }) });
+              return;
+            }
+            var code = result && result.code;
+            var message = (result && result.message) || t('skills.index.install.failed');
+            setNotice({
+              kind: 'warning',
+              text: message + (code ? ' (' + code + ')' : ''),
+              slug: entry.slug,
+              canForce: code === 'already-installed'
+            });
+          }).catch(function (failure) {
+            if (alive.current) setNotice({ kind: 'danger', text: (failure && failure.message) || String(failure) });
+          }).finally(function () {
+            if (alive.current) setInstalling(null);
+          });
+        }
+
+        var entries = data && Array.isArray(data.entries) ? data.entries : [];
+        var total = data && Number.isFinite(data.total) ? data.total : entries.length;
+
+        return h(Card, {
+          title: t('skills.index.title'),
+          extra: h('a', { href: 'https://skillhub.cn', target: '_blank', rel: 'noreferrer' }, 'SkillHub')
+        },
+          h('p', { className: 'sdzh-muted' }, t('skills.index.subtitle')),
+          h('div', { className: 'sdzh-index-search' },
+            h('input', {
+              className: 'sdzh-input',
+              type: 'search',
+              value: text,
+              placeholder: t('skills.index.search'),
+              'aria-label': t('skills.index.search'),
+              onChange: function (event) { setText(event.target.value); }
+            }),
+            h(Button, { onClick: function () { load(text.trim()); } }, t('skills.index.searchGo'))
+          ),
+          notice ? h(Banner, {
+            tone: notice.kind === 'success' ? 'info' : notice.kind
+          }, h('div', null,
+            h('span', null, notice.text),
+            notice.canForce ? h('button', {
+              type: 'button',
+              className: 'sdzh-button',
+              style: { marginLeft: '8px' },
+              onClick: function () { runInstall({ slug: notice.slug }, true); }
+            }, t('skills.index.install.force')) : null
+          )) : null,
+          state === 'loading' && !entries.length
+            ? h('div', { className: 'sdzh-index-skeleton' },
+                [0, 1, 2].map(function (item) { return h('div', { className: 'sdzh-index-skeleton-row', key: 'sk-' + item }); }))
+            : null,
+          state === 'error' ? h(Banner, { tone: 'danger' }, h('div', null,
+            h('span', null, error || t('skills.index.failed')),
+            h(Button, { onClick: function () { load(text.trim()); } }, t('skills.index.retry'))
+          )) : null,
+          state !== 'error' && entries.length ? h('div', { className: 'sdzh-index-list' }, entries.map(function (entry) {
+            return h('div', { className: 'sdzh-index-row', key: entry.slug || entry.name },
+              h('div', { className: 'sdzh-index-main' },
+                h('div', { className: 'sdzh-index-copy' },
+                  h('div', { className: 'sdzh-index-title' }, entry.name || entry.slug || ''),
+                  entry.slug ? h('div', { className: 'sdzh-index-name' }, h('code', null, entry.slug)) : null,
+                  entry.description ? h('div', { className: 'sdzh-index-desc', title: entry.description }, entry.description) : null,
+                  h('div', { className: 'sdzh-index-meta' },
+                    entry.owner ? h('span', null, entry.owner) : null,
+                    Number.isFinite(entry.downloads) ? h('span', null, t('skills.index.downloads', { count: entry.downloads })) : null,
+                    Number.isFinite(entry.installs) ? h('span', null, t('skills.index.installs', { count: entry.installs })) : null
+                  )
+                ),
+                h('button', {
+                  type: 'button',
+                  className: 'sdzh-button sdzh-button-primary',
+                  disabled: installing === entry.slug,
+                  onClick: function () { runInstall(entry, false); }
+                }, installing === entry.slug ? t('skills.index.install.busy') : t('skills.index.install'))
+              )
+            );
+          })) : null,
+          state === 'ready' && !entries.length ? h('div', { className: 'sdzh-empty' }, t('skills.index.empty')) : null,
+          h('p', { className: 'sdzh-muted' }, t('skills.index.hint', { total: total }))
+        );
+      }
+
       function SkillAdminPage(props) {
         var t = typeof props.t === 'function'
           ? props.t
@@ -2449,6 +2715,7 @@
         var [source, setSource] = useState('all');
         var [status, setStatus] = useState('all');
         var [readonlyOpen, setReadonlyOpen] = useState(false);
+        var [indexView, setIndexView] = useState('local');
         var alive = useRef(true);
         var busyRef = useRef(null);
         var closeRef = useRef(null);
@@ -2666,6 +2933,34 @@
           );
         }
 
+        var indexSwitch = h('div', { className: 'sdzh-index-switch', role: 'group', 'aria-label': t('skills.indexView.label') },
+          h('button', {
+            type: 'button',
+            'aria-pressed': indexView === 'local' ? 'true' : 'false',
+            onClick: function () { setIndexView('local'); }
+          }, t('skills.indexView.local')),
+          h('button', {
+            type: 'button',
+            'aria-pressed': indexView === 'index' ? 'true' : 'false',
+            onClick: function () { setIndexView('index'); }
+          }, t('skills.indexView.index'))
+        );
+        if (indexView === 'index') {
+          return h('div', { className: 'sdx-page' }, h('style', null, CSS + '\n' + SKILL_CSS),
+            h('div', { className: 'sdx-header' },
+              h('div', null,
+                h('h2', { className: 'sdx-title' }, t('skills.title')),
+                h('p', { className: 'sdx-subtitle' }, t('skills.subtitle'))
+              ),
+              typeof props.close === 'function'
+                ? h('div', { className: 'sdx-header-actions' }, h(Button, { onClick: props.close }, t('close')))
+                : null
+            ),
+            indexSwitch,
+            h(SkillIndexView, { t: t })
+          );
+        }
+
         return h('div', { className: 'sdx-page' },
           h('style', null, CSS + '\n' + SKILL_CSS),
           h('div', { className: 'sdx-header' },
@@ -2679,6 +2974,7 @@
               typeof props.close === 'function' ? h(Button, { onClick: props.close }, t('close')) : null
             )
           ),
+          indexSwitch,
           projectMissing ? h(Banner, { tone: 'info' }, t('skills.project.none')) : null,
           notice ? h('div', { className: 'sdx-notice sdx-notice-' + notice.kind, role: 'status', 'aria-live': 'polite' }, notice.text) : null,
           h('div', { className: 'sdx-stats' },
@@ -3326,14 +3622,30 @@
           ctx.effect(function () {
             return installPluginMarketBridge(ctx);
           }, 'skill-desc-zh: plugin-market events');
-          ctx.slots.inject('plugins.tab', function () {
+          ctx.slots.inject('main', function () {
             return ctx.slots.register({
-              name: 'plugins.tab',
-              id: 'skill-desc-zh',
-              order: 20,
-              label: function () { return t('nav'); }
+              name: 'main',
+              key: 'skill-desc-zh'
             }, function BetterSkillPanel(props) {
-              return h(BetterSkillPage, Object.assign({}, props, { t: props.t || t, ctx: ctx }));
+              return h('div', { className: 'sdzh-panel-root' },
+                h('style', null, CSS),
+                h(BetterSkillPage, Object.assign({}, props, { t: props.t || t, ctx: ctx }))
+              );
+            });
+          });
+          ctx.slots.inject('sidebar.panellist', function () {
+            return ctx.slots.register({
+              name: 'sidebar.panellist',
+              id: 'skill-desc-zh',
+              order: -10,
+              label: function () { return t('nav'); }
+            }, function BetterSkillPanelIcon(props) {
+              var size = props && Number.isFinite(props.size) ? props.size : 20;
+              return h('span', {
+                className: 'sdzh-panel-icon' + (props && props.active ? ' is-active' : ''),
+                style: { width: size + 'px', height: size + 'px', fontSize: Math.round(size * 0.62) + 'px' },
+                'aria-hidden': 'true'
+              }, '译');
             });
           });
         } catch (error) {
@@ -3386,6 +3698,7 @@
           mergeIndexEntries: mergeIndexEntries,
           indexSearchQuery: indexSearchQuery,
           SkillAdminPage: SkillAdminPage,
+          SkillIndexView: SkillIndexView,
           Boundary: Boundary
         }
       };

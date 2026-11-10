@@ -3,8 +3,8 @@
 把 DSH 内置技能与常用斜杠命令的 **description（列表/菜单里显示的描述）** 自动翻译成中文，并且随时可以一键恢复英文原文。
 
 - **只改描述，不改正文**：office 技能通过 global provider 原样透传正文；agent-preset 技能复制整目录、只替换 frontmatter 的 `description` 一行；斜杠命令只改 agent scope 里的描述，执行仍委托原 handler。
-- **Better Skill 单入口（v0.6.0 起；v0.7.1 起迁移到插件页 Tab）**：在“设置 → 插件”的顶部 Tab 行选择“Better Skill”（位于「发现」之后），内含三个内层 Tab：**描述汉化**（状态/覆盖清单/自检/应用/还原/刷新/重译）、**插件管理**（第三方列表/检查更新/一键更新/只读插件索引）、**技能管理**（创建/编辑/禁用/删除/恢复）。三个 Tab 共用同一套 controller 与 HTTP 后端。
-- **只读插件索引（v0.7.0）**：插件管理 Tab 内新增“插件索引”子页，自动读取宿主「设置 → 插件 → 发现」的索引源，支持搜索/分页/版本/安装状态/兼容性展示；不新增写入口，也不执行安装。
+- **Better Skill 单入口（v0.6.0 起；v0.8.0 起迁到左侧面板栏）**：重启后在左侧栏面板图标行（「插件」「定时任务」之上）点击「Better Skill」，主区域显示三个内层 Tab：**描述汉化**（状态/覆盖清单/自检/应用/还原/刷新/重译）、**插件管理**（第三方列表/检查更新/一键更新 + 可安装的插件索引）、**技能管理**（创建/编辑/禁用/删除/恢复 + 技能索引安装）。三个 Tab 共用同一套 controller 与 HTTP 后端。
+- **插件索引 + 技能索引（v0.8.0）**：插件管理 Tab 的索引子页读取宿主「设置 → 插件 → 发现」的索引源，可直接安装/更新索引里的第三方插件（经宿主 `pluginManager.installBundle`，保留兼容性闸门）；技能管理 Tab 新增「技能索引」，搜索并安装 SkillHub 上的技能到 `$DSH_HOME/skills`，覆盖安装前先移入废纸篓。
 - **插件管理（v0.4.0）**：列出 profile 中已安装的第三方插件，检查 npm 最新版并一键更新；官方 bundle 与 `link:` 本地插件永不被更新，更新安全边界仍由宿主把守。
 - **技能管理（v0.5.0）**：可创建/编辑/删除/禁用/恢复 `$HOME/.dsh/skills` 与 `<project>/.dsh/skills` 下的可写技能；内置技能只读；删除只进废纸篓，恢复前检查目标是否已存在。
 - **随时可逆**：`restore` 立即下架中文 provider，并把本插件创建的影子目录移入 macOS 废纸篓；再 `apply` 即可恢复中文。
@@ -15,10 +15,10 @@
 | 项 | 值 |
 | --- | --- |
 | 源码 | `~/dsh-plugins/skill-desc-zh` |
-| 包名 / 版本 | `dsh-skill-desc-zh@0.7.1` |
+| 包名 / 版本 | `dsh-skill-desc-zh@0.8.0` |
 | 宿主要求 | DSH `>=0.2.1-rc.2 <0.3.0-0`（desktop profile；0.2.2-rc.1 实测） |
 | 对外工具 | `skill_desc_zh`（单工具，8 个 action） |
-| 设置入口 | 设置 → **插件** → 顶部 Tab **Better Skill**（`plugins.tab`，id `skill-desc-zh`，order 20，位于「发现」之后；三个内层 Tab：描述汉化／插件管理／技能管理） |
+| 入口 | **左侧栏面板图标行** → **Better Skill**（`sidebar.panellist`，id `skill-desc-zh`，order -10，位于「插件」之上；主面板 `main` key `skill-desc-zh`） |
 | 状态文件 | `~/.dsh/.skill-desc-zh/state.json`（v3；v1/v2 自动迁移） |
 | 事件日志 | `~/.dsh/.skill-desc-zh/events.ndjson` |
 
@@ -31,7 +31,7 @@
 | 能力 | 说明 |
 | --- | --- |
 | 自动中文化 | 安装后 bootstrap 捕获 12 个目标技能 + 3 条命令，批量调用宿主 LLM 翻译；失败回落随包词典 `lib/dictionary.zh.json` |
-| Better Skill 插件页 Tab（v0.7.1） | 设置 → 插件 → 顶部 **Better Skill** Tab（`plugins.tab`，order 20，位于「发现」之后），内含三个内层 Tab：描述汉化（状态/开关/应用/还原/刷新/重译/自检/15 行覆盖清单）、插件管理（第三方列表/检查更新/一键更新/只读插件索引）、技能管理（创建/编辑/禁用/删除/恢复/回收站） |
+| Better Skill 侧栏面板（v0.8.0） | 左侧栏面板图标行 → **Better Skill**（`sidebar.panellist` id `skill-desc-zh`，order -10，排在「插件」之上；主面板 `main` key `skill-desc-zh`），内含三个内层 Tab：描述汉化、插件管理（含可安装的插件索引）、技能管理（含技能索引） |
 | 命令菜单中文化 | `/acp`、`/acp-cache`、`/agent-teams`（含动态 `agent-teams-<profile>`）只在当前 agent 的菜单显示中文；global 视角永远英文，执行行为不变 |
 | 一键恢复英文 | `restore` 把 `enabled=false` 写入 state，provider 立即下架，4 个影子目录进废纸篓 |
 | 随时再中文化 | `apply` 幂等启用；指纹未变时复用缓存，不重复调模型 |
@@ -93,7 +93,7 @@ cordis_inspect_query(platform=host, provider=Tool, method=listTools)
 ```
 
 - 安装 bundle 本身可能由宿主热挂载；但**Better Skill 的插件页 Tab（v0.7.1）与其中三个内层 Tab 都必须重启后才会出现**，且模型可见的技能目录快照可能要到**下一个会话**才刷新。若 `link:` 源码已升级到新版本（本次为 v0.7.1），运行中的进程仍持有旧代码，**必须重启 DSH** 才会加载新代码和插件页 Tab。
-- v0.3.0+ 的客户端半边（`exports["./client"]` + `dsh.client.platform="web"`）只在宿主启动扫描 bundle 时登记；**给已安装插件补设置页，第一次必须重启**。v0.7.1 去掉了立即加载标记，重启后打开“设置 → 插件”，顶部 Tab 行会出现“Better Skill”（在「发现」之后），进入后是“描述汉化 / 插件管理 / 技能管理”三个内层 Tab。
+- v0.3.0+ 的客户端半边（`exports["./client"]` + `dsh.client.platform="web"`）只在宿主启动扫描 bundle 时登记；**给已安装插件补入口，第一次必须重启**。v0.8.0 去掉了 `immediately`，重启后左侧面板图标行会出现「Better Skill」（排在「插件」之上），进入后是“描述汉化 / 插件管理 / 技能管理”三个内层 Tab。
 
 ### 2.3 配置（`cordis.patch.yml` 的 `config`）
 
@@ -113,7 +113,7 @@ cordis_inspect_query(platform=host, provider=Tool, method=listTools)
 
 ## 3. 工具用法（`skill_desc_zh`）
 
-所有操作都通过同一个工具完成，`action` 必填。v0.7.1 起也可以在“设置 → 插件 → Better Skill”Tab 的三个内层 Tab 里点按钮完成这些动作（语义相同）：描述汉化 Tab 见 §5.1，插件管理 Tab 对应 `plugins` action（§5.2），技能管理 Tab 对应 `skills` action（§5.3）。
+所有操作都通过同一个工具完成，`action` 必填。v0.8.0 起也可以在左侧栏「Better Skill」面板的三个内层 Tab 里点按钮完成这些动作（语义相同）：描述汉化 Tab 见 §5.1，插件管理 Tab 对应 `plugins` action（§5.2），技能管理 Tab 对应 `skills` action（§5.3）。
 
 ```jsonc
 { "action": "status" }
@@ -289,9 +289,9 @@ v0.2.0 把 state 版本从 1 升到 2，新增 `commands.byName`（每条命令�
 
 ---
 
-## 5. Better Skill 插件页 Tab（v0.6.0 引入 / v0.7.1 迁移入口）
+## 5. Better Skill 侧栏面板（v0.6.0 引入 / v0.8.0 迁到左侧面板栏）
 
-v0.6.0 引入“一个入口、三个 Tab”；**v0.7.1 把入口迁到「设置 → 插件」页的顶部 Tab**：打开设置 → 插件，在「已安装」「发现」之后的 Tab 行选择“Better Skill”（`plugins.tab`，id `skill-desc-zh`，order 20），再用内层 Tab 切换“描述汉化 / 插件管理 / 技能管理”。三个内层 Tab 与 `skill_desc_zh` 调用同一套 controller，页面动作、返回状态与工具结果语义一致；页面只是可视化入口，不改变底层还原/升级自愈逻辑。v0.7.0 在插件管理内层 Tab 内增加只读“插件索引”子页。
+v0.6.0 引入“一个入口、三个 Tab”；**v0.8.0 把入口迁到左侧栏面板图标行**：重启后点击「Better Skill」图标（`sidebar.panellist` id `skill-desc-zh`，order -10，位于「插件」之上），主区域打开同名面板（`main` key `skill-desc-zh`），再用内层 Tab 切换“描述汉化 / 插件管理 / 技能管理”。三个内层 Tab 与 `skill_desc_zh` 调用同一套 controller，页面动作、返回状态与工具结果语义一致；v0.8.0 还把插件索引升级为可安装，并在技能管理里新增「技能索引」。
 
 > **状态说明**：截至 2026-11-08，源码 v0.7.1 已完成源码级验收（229/229 单测、`check:client` 18/18、client 27/27、技能/插件/命令/agent 层 e2e），t45 独立复验通过。但**当前运行进程仍是重启前的旧代码**；Better Skill 插件页 Tab、三个内层 Tab 与插件索引子页都要重启 DSH 后才会出现。本章是重启后的使用说明，“已验证”仅指源码/单测/真实模块探针层，真实页面、认证、真实写操作与真实市场网络仍需重启后人工确认。
 
@@ -299,15 +299,15 @@ v0.6.0 引入“一个入口、三个 Tab”；**v0.7.1 把入口迁到「设置
 
 **入口与 Tab 切换**
 
-1. **重启 DSH**。v0.3.0+ 的客户端半边与 HTTP 路由需要宿主启动时重新扫描 bundle；升级 `link:` 源码后不重启，Better Skill Tab 不会出现。v0.7.1 已去掉 `dsh.client.immediately`，避免启动期强制加载。
-2. 打开“设置 → 插件”，在顶部 Tab 行选择“Better Skill”（位于「发现」之后）；进入后默认显示“描述汉化”内层 Tab。
+1. **重启 DSH**。客户端半边与 HTTP 路由需要宿主启动时重新扫描 bundle；升级 `link:` 源码后不重启，侧栏入口不会出现。v0.8.0 已去掉 `dsh.client.immediately`，避免启动期强制加载。
+2. 在左侧栏面板图标行点击 **Better Skill**（排在「插件」之上）；主区域打开同名面板，默认显示“描述汉化”内层 Tab。
 3. 顶部内层 Tab 栏可点击，也支持键盘：`←`/`→` 在三个 Tab 间循环，`Home`/`End` 跳到第一个/最后一个；焦点跟随选中项，`role=tab`/`tablist`/`tabpanel` 与 `aria-selected`/`aria-controls` 完整。
 4. 当前内层 Tab 写入 `localStorage` 的 `dsh-skill-desc-zh.activeTab`；重开设置会恢复到上次的 Tab；值非法/读写抛错时回退到“描述汉化”。
 5. 只有当前内层 Tab 的内容会挂载；每个 Tab 的错误边界带 `key=active`，一个 Tab 崩溃不会让切换永久卡在 fallback。切换 Tab 会卸载旧面板、停止其请求/轮询。
 
 ### 5.1 描述汉化 Tab
 
-**第一次使用**：重启后打开“设置 → 插件 → Better Skill”，页面顶部应显示运行状态；若显示“无法读取状态”，先看下面的故障排查。需要中文化时点“应用”，已生效会显示 `phase=active` 与覆盖数量；想回英文点“还原”（二次确认），确认后 provider 下架、影子目录进废纸篓、命令影子注销。
+**第一次使用**：重启后点击左侧栏「Better Skill」，面板顶部应显示运行状态；若显示“无法读取状态”，先看下面的故障排查。需要中文化时点“应用”，已生效会显示 `phase=active` 与覆盖数量；想回英文点“还原”（二次确认），确认后 provider 下架、影子目录进废纸篓、命令影子注销。
 
 页面只在**可见时**每 5 秒轮询一次；切到后台会停止，失败按 5→10→20→30 秒退避，不会持续打满宿主。
 
@@ -385,7 +385,7 @@ v0.6.0 引入“一个入口、三个 Tab”；**v0.7.1 把入口迁到「设置
 
 ### 5.2 插件管理 Tab
 
-**入口：设置 → 插件 → 顶部 Tab「Better Skill」→ “插件管理”内层 Tab**（`plugins.tab`，id `skill-desc-zh`，order 20，位于「发现」之后）。
+**入口：左侧栏「Better Skill」→ “插件管理”内层 Tab**（`sidebar.panellist` id `skill-desc-zh`，order -10，位于「插件」之上；主面板 `main` key `skill-desc-zh`）。
 
 #### 功能
 
@@ -425,11 +425,11 @@ v0.6.0 引入“一个入口、三个 Tab”；**v0.7.1 把入口迁到「设置
 
 另有 `unknown-plugin`（不在可管理列表）、`not-updateable`（非 npm 来源）、`network`（registry 请求失败）、`install-failed` / `operation-error`（宿主安装失败）。更新结果里的 `restart-required` 不是错误，页面会提示重启 DSH。
 
-#### 插件索引（v0.7.0，只读）
+#### 插件索引（v0.8.0，可安装）
 
-**入口：Better Skill → “插件管理”Tab → 顶部“已安装 | 插件索引”**。默认仍是“已安装”，原有检查更新/更新流程完全不变；切到“插件索引”后只读展示宿主「设置 → 插件 → 发现」已配置的索引源，不新增 host HTTP 路由，也不改 host 实现。
+**入口：Better Skill → “插件管理”Tab → 顶部“已安装 | 插件索引”**。默认仍是“已安装”，原有检查更新/更新流程不变；切到“插件索引”后读取宿主「设置 → 插件 → 发现」已配置的索引源，`not-installed`/`update-available`/`different-version` 的条目会显示“安装/更新/切换”按钮：先调用本插件 HTTP 路由 `POST /plugins/skill-desc-zh/market/install`，宿主侧再调 `pluginManager.installBundle(spec,{registry})`；`restart-required`、`pending-builds`、`incompatible` 按宿主返回原样提示。索引源的增删/排序仍只在宿主发现页管理，本页不写索引源。
 
-- **数据源**：`ctx.remote.pluginMarket.listIndexes()` 读取已配置源；`search(url, { text, sort: { kind: 'index' }, offset, limit: 50, fetchedAt?, refresh? })` 读取条目。索引源增删/排序仍由宿主发现页管理；本页没有写入口。
+- **数据源**：宿主 `pluginMarket` 服务（经本插件 HTTP 路由 `/market/sources`、`/market/search`、`/market/install` 访问）；`search(url, { text, sort: { kind: 'index' }, offset, limit: 50, fetchedAt?, refresh? })` 读取条目；`entry(url,name)` + `installBundle` 执行安装。索引源增删/排序仍由宿主发现页管理。
 - **同步**：进入/切回索引视图、`plugin-market/changed`、`connection/reset` 会重读源并重跑当前搜索；`plugin-manager/changed` 只重跑搜索以刷新安装状态。监听器在 `ctx.effect` 内注册，视图卸载/插件 dispose 时清理。
 - **搜索与分页**：输入 250ms 防抖；“加载更多”沿用当前结果的 `fetchedAt` 与 `nextOffset`，按 `name` 去重追加并显示 `total`。
 - **行与详情**：图标（失败回退首字母）、标题/包名、描述、作者、默认版本、安装状态徽章；不兼容显示“不兼容（宿主 X）”，豁免显示“已豁免”。展开后显示作者/主页/仓库（`http(s)` 外链，`target="_blank" rel="noreferrer"`）、分类/标签、SemVer 降序的全部版本（推荐/预发布/已安装/不兼容/豁免）、`install.spec`/`registry` 和“到插件页安装”的只读提示。
@@ -452,7 +452,7 @@ v0.6.0 引入“一个入口、三个 Tab”；**v0.7.1 把入口迁到「设置
 
 ### 5.3 技能管理 Tab
 
-**入口：设置 → 插件 → 顶部 Tab「Better Skill」→ “技能管理”内层 Tab**（`plugins.tab`，id `skill-desc-zh`，order 20，位于「发现」之后）。
+**入口：左侧栏「Better Skill」→ “技能管理”内层 Tab**（`sidebar.panellist` id `skill-desc-zh`，order -10；主面板 `main` key `skill-desc-zh`）。
 
 #### 能做什么
 
@@ -467,6 +467,15 @@ v0.6.0 引入“一个入口、三个 Tab”；**v0.7.1 把入口迁到「设置
 | 回收站 | 列出最近删除（上限 200 条），支持恢复与查看原路径；不提供永久清空 |
 
 所有写操作都只在用户级或已放行项目的 `.dsh/skills` 内；内置技能源文件与插件包永不修改。写盘前对已有文件做 `--snapshot` 留档，临时文件原子替换。
+
+#### 技能索引（v0.8.0）
+
+顶部“本地技能 | 技能索引”切换。技能索引调用本插件 HTTP 路由 `/skill-index/search` 与 `/skill-index/install`，宿主侧由 `lib/skill-hub.js` 访问 SkillHub 公共接口：
+
+- **搜索**：`GET https://api.skillhub.cn/api/skills?page=&pageSize=&keyword=`，展示名称/描述/下载量/安装量/作者；分页、空态、失败重试。
+- **安装**：先 `GET /api/v1/skills/<slug>/files` 取文件清单，再逐个 `GET /api/v1/skills/<slug>/file?path=<path>` 下载；校验收到的字节数与 sha256、拒绝越界路径、单文件 ≤2MB、总量 ≤6MB、文件数 ≤64。
+- **落盘**：写入 `$DSH_HOME/skills/<slug>`（临时目录原子替换）；目标已存在时返回 `already-installed`，勾选“覆盖安装”才先把旧目录移入废纸篓再写入；`SKILL.md` frontmatter 的 `name` 必须等于 slug。
+- **边界**：只安装技能文件，不执行来源脚本；SkillHub 不可达时只影响本子页；来源与许可请以 SkillHub 页面为准。
 
 #### 可写与只读边界
 
@@ -518,7 +527,7 @@ v0.6.0 引入“一个入口、三个 Tab”；**v0.7.1 把入口迁到「设置
 
 以下项目在重启前只做了静态/单元/真实模块探针验证，页面像素、真实认证与点击副作用必须重启后由用户确认：
 
-1. **设置 → 插件** 顶部 Tab 行出现“Better Skill”（在「发现」之后），点击后看到“描述汉化 / 插件管理 / 技能管理”三个内层 Tab，默认描述汉化，Tab 栏不重复、不缺失。
+1. **左侧栏面板图标行**出现「Better Skill」（在「插件」之上），点击后主区域看到“描述汉化 / 插件管理 / 技能管理”三个内层 Tab，默认描述汉化，Tab 栏不重复、不缺失；设置页里不再有独立入口。
 2. 刷新/重开设置后恢复上次 Tab；键盘 `←`/`→`/`Home`/`End` 可切换，焦点与 `aria-selected` 正确；窄窗 Tab 栏可横向滚动。
 3. 描述汉化 Tab 能读到真实状态（不是“无法读取状态”）；应用/还原与工具 `skill_desc_zh` 结果一致，中文/英文往返正确，页面不可见时停止轮询。
 4. 插件管理 Tab 能列出第三方插件并检查更新；遇到 `pending-builds`/隔离期/不兼容时提示正确；不把失败说成成功。
@@ -526,7 +535,8 @@ v0.6.0 引入“一个入口、三个 Tab”；**v0.7.1 把入口迁到「设置
 6. 在测试项目新建/编辑/禁用/删除/恢复各走一遍；删除只进废纸篓，恢复不覆盖同名目标，禁用后 agent 目录不可调用。
 7. 并发保存/并发动作返回 409 且页面提示重载；非法名称/路径、超限 body、未认证分别得到 400/413/401/403，不出现“保存成功但文件没变”。
 8. 一个 Tab 渲染崩溃后切到其它 Tab 仍能正常渲染（`key=active` 重建错误边界）；客户端加载失败时主界面不被拖垮。
-9. 插件管理 → 插件索引：源列表来自“设置 → 插件 → 发现”，搜索/分页/状态/兼容性正常；`exempted` 显示“已豁免”、`compatible:false` 显示“不兼容（宿主 X）”；断开索引源/无 remote 时只影响该子页。
+9. 插件管理 → 插件索引：源列表来自“设置 → 插件 → 发现”，搜索/分页/状态/兼容性正常；`exempted` 显示“已豁免”、`compatible:false` 显示“不兼容（宿主 X）”；对一条 `update-available` 执行“更新”，确认走宿主安装并按 `restart-required`/`pending-builds` 提示；断开索引源时只影响该子页。
+10. 技能管理 → 技能索引：搜索 SkillHub 返回条目，安装一个不在本地的技能到 `$DSH_HOME/skills`，确认出现在本地列表；重复安装提示 `already-installed`，勾选覆盖安装后旧目录进废纸篓；断网时只影响该子页。
 
 > 文案/元数据已在 t19 修正：`confirm.restore` 不再写“4 个项目”，`group.global` 改为“global 层 · provider 覆盖（office 系列 + browser-skill）”，命令组改为“命令 · agent 作用域影子（3 个斜杠命令）”，`notices.scope` 改为“8 个全局技能（office ×7 + browser-skill）”；`package.json` 同时提供 `./icon` 与 `./icon.svg` 两个导出说明符。真实页面文案仍以重启后的 client 加载结果为准。
 
@@ -650,8 +660,8 @@ node ~/.dsh/skills/safe-delete-trash/trash.mjs /Applications/dsh/.dsh/skills/<na
 
 | 现象 | 排查 |
 | --- | --- |
-| 设置 → 插件 里没有“Better Skill”Tab | 先确认已重启（v0.7.1 client 在启动扫描时登记 `plugins.tab`）；再看 `list_plugins` 的 `fiberPhase=active` 与包版本 0.7.1；若“设置 → 插件”页本身不可用/被禁用（旧宿主或插件页插件未启用），`plugins.tab` 不会声明，客户端只等待、不抛错。完整排查见 §5.1 |
-| 只有旧的设置侧栏 Better Skill 入口 | 历史说明：v0.6.0–v0.7.0 的入口在设置侧栏，v0.7.1 已迁移到“设置 → 插件”顶部 Tab。运行进程仍是旧 client 时会暂时看到旧入口；重启后应只剩插件页 Tab |
+| 左侧栏没有「Better Skill」图标 | 先确认已重启（v0.8.0 client 在启动扫描时登记 `sidebar.panellist` + `main`）；再看 `list_plugins` 的 `fiberPhase=active` 与包版本 0.8.0；运行进程仍是旧 client 时可能仍显示旧入口。完整排查见 §5.1 |
+| 仍看到设置页/插件页旧 Tab | 历史说明：v0.6.0–v0.7.0 入口在设置侧栏，v0.7.1 在插件页 Tab，v0.8.0 已迁到左侧栏面板行；旧进程会沿用旧 client，重启后应只剩侧栏入口 |
 | 技能管理 Tab 列表为空 / 只读区为空 | 确认项目根满足 `.git`+`$HOME`/allowlist；`skill_desc_zh(action="skills", source="all")` 对照；只读技能只在 `source=all` 出现；旧 client 可能没有只读分组 |
 | 技能管理保存返回 409 | 文件已被其他窗口改动；页面点“重新加载”取新指纹再改，不要强行覆盖；目标已存在的新建/恢复也会返回 `conflict` |
 | 删除/恢复失败 | 确认 `trash.mjs` 可执行、目标在允许技能根内；错误码 `trash-unavailable`/`unsupported-source`/`conflict` 会原样显示，插件不会降级为永久删除 |
@@ -694,7 +704,7 @@ node ~/dsh-plugins/skill-desc-zh/scripts/preflight.mjs
 7. **本地包预检无法验证供应链**：来源/签名/发布时间不可判定，已在预检中如实标注。
 8. **`restoreOnQuit` 默认关闭**：退出宿主不会自动回英文；需要时显式 `restore`。
 9. **命令描述只在 agent scope 生效**：global 视角始终英文；v0.2.0 代码需重启宿主后才加载；已打开的命令菜单可能因 GUI 软刷新短暂显示旧文案，重开即恢复。
-10. **Better Skill 需要重启一次才出现**：v0.3.0+ 的 client 半与 HTTP 路由只在宿主启动扫描 bundle 时登记；`link:` 源码热更新不会自动加载客户端。v0.7.1 的插件页 Tab（`plugins.tab`，order 20，位于「发现」之后）与三个内层 Tab 同理；已去掉 `immediately`，真实认证、键盘/焦点与点击仍需人工验收。
+10. **Better Skill 需要重启一次才出现**：v0.3.0+ 的 client 半与 HTTP 路由只在宿主启动扫描 bundle 时登记；`link:` 源码热更新不会自动加载客户端。v0.8.0 的侧栏面板入口（`sidebar.panellist` order -10 + `main` key `skill-desc-zh`）与三个内层 Tab 同理；已去掉 `immediately`，真实认证、键盘/焦点与点击仍需人工验收。
 11. **HTTP 错误路径的两个缺陷已修复（t18/t21）**：动作抛异常后 `busy` 会释放（500 后 GET/POST 不再 409）；超时/迟到 reject 不再产生 unhandled rejection；插件更新的单飞改为在首个 await 前占位，避免并发重复安装。已加回归测试；真实 Electron 进程仍需重启后复验。
 12. **页面文案与 icon 元数据已修正（t19）**：还原确认不再写“4 个项目”，global 组改为“global 层 · provider 覆盖（office 系列 + browser-skill）”，命令组改为“命令 · agent 作用域影子”，`notices.scope` 写“8 个全局技能（office ×7 + browser-skill）”；`package.json` 同时提供 `./icon` 与 `./icon.svg`。真实页面渲染待重启确认。
 13. **插件管理 Tab 只覆盖 npm 第三方插件**：官方 `@deepseek-ai/*` bundle、`link:` 本地插件、workspace/git/tarball 来源都不参与更新；启用/禁用/卸载仍需原生“设置 → 插件”页。更新只调用宿主 `pluginManager`，不会绕过隔离期或代替用户批准构建脚本；`pending-builds` 会显示宿主错误，构建脚本批准在原生页完成。
@@ -707,7 +717,7 @@ node ~/dsh-plugins/skill-desc-zh/scripts/preflight.mjs
 
 ---
 
-## 11. 验收结论（2026-11-08，v0.7.1）
+## 11. 验收结论（2026-11-10，v0.8.0）
 
 完整报告见 [`docs/verification.md`](docs/verification.md)：v0.1 A1–A12、v0.2.0 T1–T6 / A1–A10、v0.3.0 A1–A15、v0.4.0 A1–A12 与复验、v0.5.0 A1–A28 与两次复验、v0.6.0 A1–A12 与二次验收、v0.7.0 t38 首验 / t41 复验 / t43 二次复验、v0.7.1 t45 入口迁移独立验收。最终结论是**源码级 pass、ready-for-restart**；t45 已复核 `plugins.tab` 契约、启动失败路径与全量回归，真实插件页 Tab、真实 `remote.pluginMarket` 网络/事件时序仍需重启后人工验收。
 
@@ -716,15 +726,16 @@ node ~/dsh-plugins/skill-desc-zh/scripts/preflight.mjs
 | 0.2.2 适配（engines/no peer） | ✅ `0.2.2-rc.1` 满足 `>=0.2.1-rc.2 <0.3.0-0`；无 `@deepseek-ai/*` peer |
 | 工具 `skill_desc_zh` | ✅ 8 个 action（`status/apply/restore/retranslate/refresh/doctor/plugins/skills`）语义不变；v0.7.1 未改 host 路由/工具 |
 | 更名「描述汉化」 | ✅ 用户可见文案/README/locale/tool/命令提示已统一；内部 `NS`/`TAB_STORAGE_KEY`/`TOOL_NAME`/package id 未变；旧名只保留在 verification 历史与旧名说明 |
-| **`plugins.tab` 单入口（v0.7.1）** | ✅ 唯一注册 `plugins.tab`：id `skill-desc-zh`、order 20、label thunk `t('nav')`；位于「发现」之后；宿主 0.2.2-rc.1 的 list/root 声明与 `renderSlot(install/openPackage)` 已核对 |
+| **侧栏面板入口（v0.8.0）** | ✅ 唯一注册 `sidebar.panellist`（id `skill-desc-zh`、order -10、label thunk `t('nav')`、`{size,active}` 图标）+ `main`（key `skill-desc-zh`，包 `.sdzh-panel-root`）；不再注册 `settings.section` / `plugins.tab` |
 | 启动安全（v0.7.1） | ✅ `inject=['slots','locale']`；无新增服务/依赖；`dsh.client.immediately` 已移除；`apply` try/catch；slots 缺失/slot 未声明/effect 抛错均不向宿主抛出，仅设置 `__SDZH_CLIENT_ERROR__` |
-| 只读插件索引 | ✅ 源码级：源列表/搜索/分页/状态/兼容性/事件刷新/无 remote 降级；F1（Record categories/labels）、F2（exempted 优先）与 F1R（缺 title 回退）已修复，t43 独立复验通过；真实市场网络待重启 |
+| 插件索引安装（v0.8.0） | ✅ 源码级：sources/search/install 三路由 + 单飞 + lossless 归一化；install 经 `pluginManager.installBundle`，保留兼容性闸门与 `pending-builds` 提示；真实市场网络与真实安装待重启 |
+| 技能索引（v0.8.0） | ✅ 源码级：SkillHub 搜索/详情/文件清单/逐文件下载 + size/sha256/路径/限额校验 + 原子落盘 + 覆盖前废纸篓；真实 SkillHub 网络待重启 |
 | 插件管理 Tab（v0.4.0） | ✅ 源码级：列表/检查更新/更新预检与分类/单飞；B1/P1/P2/V1/C1 已修复并回归 |
 | 技能管理 Tab（v0.5.0） | ✅ 源码级：可写 user/project、只读 plugin/preset/bundled/runtime 分离；创建/编辑/禁用/删除/恢复/冲突/只读拒绝；真实写盘待重启 |
 | 命令描述（v0.2.0） | ✅ 源码级：3 条命令 agent 中文、global 英文、执行委托原 handler；真实菜单/点击待重启 |
 | 技能/插件 HTTP 路由 | ✅ 单元/真实模块探针：认证 401/403、no-store、body 限额、并发 409；真实认证后 200 待重启 |
 | 删除纪律 | ✅ `verify.mjs` 扫描 49 文件无永久删除；唯一通道 `lib/trash.js` → `trash.mjs` |
-| **测试/静态检查** | ✅ `npm test` **229/229**；`check:client` **18/18**、locale **345** keys；`client` **27/27**；`skills-e2e` **32/32**；`e2e:plugin-admin` **21/21**；`e2e:commands` **10/10**；`e2e:agent-layer` **7/7**；`node --check` **49 文件 0 失败**；`verify.mjs` **49 文件通过** |
+| **测试/静态检查** | ✅ `npm test` **252/252**；`check:client` **18/18**、locale **370** keys；`client` **29/29**；`plugin-index` **9/9**；`skill-hub` **10/10**；`skills-e2e` **32/32**；`e2e:plugin-admin` **21/21**；`e2e:commands` **10/10**；`e2e:agent-layer` **7/7**；`node --check` 全部通过 |
 | 真实 GUI / 真实市场 / 真实写操作 | ⏳ **待重启后人工验收**（插件页 Tab 位置与渲染、三内层 Tab/记忆/键盘、索引源与网络、真实插件更新、真实技能写盘） |
 
 **待重启确认 / 已知边界**：
@@ -740,9 +751,9 @@ node ~/dsh-plugins/skill-desc-zh/scripts/preflight.mjs
 9. **v0.4.0 / v0.6.0 / v0.7.0 修复**：B1 lossless JSON、P1 更新单飞、P2 HTTP 并发单飞、V1 `clipText` 删除纪律误报、C1 检查更新改走 POST；F1 Boundary key 重置、F2 aria-controls 仅激活、I1 sha 基线；v0.7.0 的 F1 Record categories/labels、F2 exempted 优先、F1R 缺失 title 回退均已由 t40–t43 独立复验。
 10. **真实插件更新 / 真实技能写盘**：plugin-admin e2e 用 fake `installBundle`；技能管理 e2e 用临时 HOME/项目，不碰真实 `~/.dsh` 或 `/Applications/dsh/.dsh`；真实更新/写盘需重启后手动验收。
 
-当前安装状态：desktop profile 通过 `link:~/dsh-plugins/skill-desc-zh` 指向源码，包版本已是 `0.7.1`，`enabled=true`、`fiberPhase=active`；**运行中的进程仍是重启前的旧代码**，state 为 v3（12/12 技能中文、3 条命令中文，4 个影子在 `/Applications/dsh/.dsh/skills/`）。重启 DSH 后才会加载 `plugins.tab` 入口、三个内层 Tab、插件索引子页与 v0.4.0–v0.7.1 修复。
+当前安装状态：desktop profile 通过 `link:~/dsh-plugins/skill-desc-zh` 指向源码，包版本已是 `0.8.0`，`enabled=true`、`fiberPhase=active`；state 为 v3。重启 DSH 后才会加载新的侧栏面板入口、三个内层 Tab、可安装的插件索引与技能索引。
 
-> v0.7.1 为**源码级验收**：229/229 单测 + `check:client` 18/18 + client 27/27 + `skills-e2e` 32/32 + `e2e:plugin-admin` 21/21 + `e2e:commands` 10/10 + `e2e:agent-layer` 7/7 + `node --check` 49/49 + `verify.mjs` exit 0；t38 首验的 F1/F2、t41 的 F1R 均已修复并经 t43 独立复验，t45 又对入口迁移做了独立验收。本轮未安装/升级/重启 profile，profile 仍为 `link:` 指向源码；真实页面、真实插件更新、真实市场与真实技能写盘尚未验收。
+> v0.8.0 为**源码级验收**：252/252 单测 + `check:client` 18/18 + client 29/29 + plugin-index 9/9 + skill-hub 10/10 + `skills-e2e` 32/32 + `e2e:plugin-admin` 21/21 + `e2e:commands` 10/10 + `e2e:agent-layer` 7/7 + `node --check` 全部通过。本轮未安装/升级/重启 profile，profile 仍为 `link:` 指向源码；真实侧栏渲染、真实插件索引安装、真实 SkillHub 下载与真实技能写盘仍需重启后人工验收。
 
 ---
 
@@ -752,12 +763,12 @@ node ~/dsh-plugins/skill-desc-zh/scripts/preflight.mjs
 cd ~/dsh-plugins/skill-desc-zh
 
 node --check lib/index.js && node --check client.js
-npm test                                   # node --test test/*.test.mjs，229 个用例
+npm test                                   # node --test test/*.test.mjs，252 个用例
 npm run e2e:agent-layer                    # agent 层覆盖机制端到端（用宿主真实 cordis/dsh-skill 模块）
 npm run e2e:commands                       # 命令影子端到端（真实 CommandRuntime/createScope/execute）
 npm run e2e:plugin-admin                   # 插件管理端到端（fake installBundle，不真实安装）
 npm run e2e:skills                         # 技能管理端到端（临时 HOME/项目，不碰真实技能）
-npm run check:client                       # 客户端 18 项静态检查（plugins.tab 入口/三内层 Tab/插件索引/locale 345）
+npm run check:client                       # 客户端 18 项静态检查（侧栏面板入口/三内层 Tab/插件索引/技能索引/locale 370）
 node scripts/preflight.mjs                 # 安装预检（包装官方 audit.mjs）
 node scripts/verify.mjs --expect-installed --expect-applied   # 文件级验收
 # 历史 v0.6 的 sha 基线 docs/v0.6.0-sha256.txt 仅用于回滚对照；v0.7.0 已改动 lib/scripts，勿把它当作当前全绿项

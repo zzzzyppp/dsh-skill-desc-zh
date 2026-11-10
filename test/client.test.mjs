@@ -107,38 +107,58 @@ const plugin = registration.factory((request) => {
 })
 const internals = plugin.__test__
 
-test('client 注册：id、factory、注入与 plugins.tab 入口', () => {
+test('client 注册：id、factory、注入与侧栏入口', () => {
   assert.equal(registration.id, 'dsh-skill-desc-zh')
   assert.deepEqual(plugin.inject, ['slots', 'locale'])
   assert.equal(typeof plugin.apply, 'function')
-  assert.equal(internals.PAGE_VERSION, '0.7.1')
+  assert.equal(internals.PAGE_VERSION, '0.8.0')
   const env = makeCtx('zh')
   plugin.apply(env.ctx)
-  assert.deepEqual(env.calls.injected, ['plugins.tab'])
-  assert.equal(env.calls.slots.length, 1)
-  const entry = env.calls.slots[0]
-  const { spec, Component } = entry
-  assert.equal(spec.name, 'plugins.tab')
-  assert.equal(spec.id, 'skill-desc-zh')
-  assert.equal(spec.order, 20)
-  assert.equal(spec.locale, undefined)
-  assert.equal(spec.label(), 'Better Skill')
-  assert.equal(typeof Component, 'function')
+  assert.deepEqual(env.calls.injected, ['main', 'sidebar.panellist'])
+  assert.equal(env.calls.slots.length, 2)
+  const main = env.calls.slots.find((item) => item.spec.name === 'main')
+  const panel = env.calls.slots.find((item) => item.spec.name === 'sidebar.panellist')
+  assert.ok(main, 'main slot registration missing')
+  assert.ok(panel, 'sidebar.panellist registration missing')
+  assert.equal(main.spec.key, 'skill-desc-zh')
+  assert.equal(panel.spec.id, 'skill-desc-zh')
+  assert.equal(panel.spec.order, -10)
+  assert.equal(panel.spec.label(), 'Better Skill')
+  const wrapper = main.Component({})
+  assert.equal(wrapper.type, 'div')
+  assert.equal(wrapper.props.className, 'sdzh-panel-root')
+  const page = wrapper.props.children.find((child) => child && child.type === internals.BetterSkillPage)
+  assert.ok(page, 'panel must render BetterSkillPage')
+  assert.equal(page.props.ctx, env.ctx)
+  assert.equal(typeof page.props.t, 'function')
   env.setLocale('en')
-  assert.equal(spec.label(), 'Better Skill')
+  assert.equal(panel.spec.label(), 'Better Skill')
   assert.equal(env.calls.locales[0].ns, 'skill-desc-zh')
   assert.equal(env.calls.effects[0], 'skill-desc-zh: locale')
 })
 
-test('plugins.tab Panel：渲染三内层 Tab 且默认 translate', () => {
+test('侧栏图标：尺寸、激活态与中文标记', () => {
   const env = makeCtx('zh')
   plugin.apply(env.ctx)
-  const entry = env.calls.slots[0]
-  const panel = entry.Component({})
-  assert.equal(panel.type, internals.BetterSkillPage)
-  assert.equal(panel.props.ctx, env.ctx)
-  assert.equal(typeof panel.props.t, 'function')
-  const tree = internals.BetterSkillPage(panel.props)
+  const panel = env.calls.slots.find((item) => item.spec.name === 'sidebar.panellist')
+  const icon = panel.Component({ size: 18, active: true })
+  assert.equal(icon.type, 'span')
+  assert.ok(String(icon.props.className).includes('sdzh-panel-icon'))
+  assert.ok(String(icon.props.className).includes('is-active'))
+  assert.equal(icon.props.style.width, '18px')
+  assert.equal(icon.props.style.height, '18px')
+  assert.equal(icon.props['aria-hidden'], 'true')
+  assert.deepEqual(icon.props.children, ['译'])
+  assert.equal(internals.SkillIndexView && typeof internals.SkillIndexView, 'function')
+})
+
+test('BetterSkillPage：渲染三内层 Tab 且默认 translate', () => {
+  const env = makeCtx('zh')
+  plugin.apply(env.ctx)
+  const main = env.calls.slots.find((item) => item.spec.name === 'main')
+  const wrapper = main.Component({})
+  const page = wrapper.props.children.find((child) => child && child.type === internals.BetterSkillPage)
+  const tree = internals.BetterSkillPage(page.props)
   const tabbar = tree.props.children.find((child) => child.props && child.props.role === 'tablist')
   assert.ok(tabbar)
   const tabs = Array.isArray(tabbar.props.children[0]) ? tabbar.props.children[0] : tabbar.props.children
@@ -146,10 +166,42 @@ test('plugins.tab Panel：渲染三内层 Tab 且默认 translate', () => {
   assert.deepEqual(tabs.map((tab) => tab.props.id), ['sdzh-tab-translate', 'sdzh-tab-plugins', 'sdzh-tab-skills'])
   assert.equal(tabs[0].props['aria-selected'], 'true')
   assert.equal(tabs[0].props['aria-controls'], 'sdzh-panel-translate')
-  const page = tree.props.children.find((child) => child.props && child.props.role === 'tabpanel')
-  assert.ok(page)
-  assert.equal(page.props.id, 'sdzh-panel-translate')
-  assert.equal(page.props.children[0].props.children[0].type, internals.SettingsPage)
+  const tabPanel = tree.props.children.find((child) => child.props && child.props.role === 'tabpanel')
+  assert.ok(tabPanel)
+  assert.equal(tabPanel.props.id, 'sdzh-panel-translate')
+  assert.equal(tabPanel.props.children[0].props.children[0].type, internals.SettingsPage)
+})
+
+test('fetch 封装：插件索引与技能索引的 URL 与载荷', async () => {
+  const calls = []
+  const api = internals.createApi(async (url, init) => {
+    calls.push({ url, init })
+    return response({ ok: true, entries: [], total: 0 })
+  })
+  await api.marketSources()
+  assert.equal(calls[0].url, '/plugins/skill-desc-zh/market/sources')
+
+  await api.searchMarket('https://cdn.dsh.so/market/index.json', 'demo', { offset: 20, limit: 10, refresh: true })
+  assert.equal(
+    calls[1].url,
+    '/plugins/skill-desc-zh/market/search?url=https%3A%2F%2Fcdn.dsh.so%2Fmarket%2Findex.json&q=demo&offset=20&limit=10&refresh=1'
+  )
+
+  await api.installMarketPlugin({ url: 'https://cdn.dsh.so/market/index.json', name: 'pkg', version: '1.0.0' })
+  assert.equal(calls[2].url, '/plugins/skill-desc-zh/market/install')
+  assert.equal(calls[2].init.method, 'POST')
+  assert.deepEqual(JSON.parse(calls[2].init.body), {
+    url: 'https://cdn.dsh.so/market/index.json',
+    name: 'pkg',
+    version: '1.0.0'
+  })
+
+  await api.searchSkillHub('笔记', 2, { pageSize: 20 })
+  assert.equal(calls[3].url, '/plugins/skill-desc-zh/skill-index/search?q=%E7%AC%94%E8%AE%B0&page=2&pageSize=20')
+
+  await api.installSkillHub('demo-notes', true)
+  assert.equal(calls[4].url, '/plugins/skill-desc-zh/skill-index/install')
+  assert.deepEqual(JSON.parse(calls[4].init.body), { slug: 'demo-notes', force: true })
 })
 
 test('locale 文件完整、zh/en key 一致、通过 DICT 校验', () => {
@@ -158,7 +210,7 @@ test('locale 文件完整、zh/en key 一致、通过 DICT 校验', () => {
   assert.deepEqual(Object.keys(zh).sort(), Object.keys(internals.DICT.zh).sort())
   assert.deepEqual(Object.keys(en).sort(), Object.keys(internals.DICT.en).sort())
   assert.deepEqual(Object.keys(zh).sort(), Object.keys(en).sort())
-  assert.equal(Object.keys(zh).length, 345)
+  assert.equal(Object.keys(zh).length, 370)
   assert.ok(Object.keys(zh).filter((key) => key.startsWith('skills.')).length >= 80)
   assert.equal(zh.nav, 'Better Skill')
   assert.equal(en.nav, 'Better Skill')
@@ -423,7 +475,7 @@ test('counts/engines 派生与 phase token', () => {
 
 test('manifest：version/exports/dsh.client/files/check 脚本', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'))
-  assert.equal(pkg.version, '0.7.1')
+  assert.equal(pkg.version, '0.8.0')
   assert.equal(pkg.exports['./client'], './client.js')
   assert.equal(pkg.exports['./locale/*.json'], './locale/*.json')
   assert.equal(pkg.dsh.client.platform, 'web')

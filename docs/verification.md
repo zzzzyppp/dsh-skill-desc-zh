@@ -2146,3 +2146,36 @@ STARTUP_PROBE {"normal":{"injected":["plugins.tab"],"slots":1,"label":"Better Sk
 ### 7. 终审
 
 **verdict：pass（源码级）**。A1–A7 通过，A8 保持待重启；可进入 t46 文档更新。t44 的 check-client 18（非 19）是 18 项中一对一替换，不是少做检查。
+
+## v0.8.0 验收记录（2026-11-10）
+
+结论：**源码级 pass（ready-for-restart）**。本轮目标（用户 m08524）：把入口迁到左侧栏面板行（「插件」之上），并给插件索引增加安装、给技能管理增加 SkillHub 技能索引。
+
+### 实现范围
+
+- 入口：`client.js` 注册 `main`（key `skill-desc-zh`，包裹 `.sdzh-panel-root`）与 `sidebar.panellist`（id `skill-desc-zh`、order -10、label `t('nav')`、「译」图标 `{size,active}`）；移除 `plugins.tab` 与旧 `settings.section` 注册。
+- 插件索引安装：`lib/plugin-index.js`（describe/sources/search/install；`pluginManager.installBundle` + `toLosslessJson` 归一化；单飞）；`lib/http-api.js` 新增 `/market/sources`、`/market/search`、`/market/install`。
+- 技能索引：`lib/skill-hub.js`（SkillHub 搜索、详情、文件清单、逐文件下载；size/sha256/路径/限额校验；临时目录原子落盘；覆盖前废纸篓）；`/skill-index/search`、`/skill-index/install`。
+- 客户端：`PluginIndexRow` 安装按钮、`PluginIndexView` 安装流程与提示、`SkillIndexView`、`SkillAdminPage` 二级切换、CSS（`.sdzh-panel-root` / `.sdzh-panel-icon`）。
+- 文案：新增 `plugins.index.install.*`（7）与 `skills.index.*` / `skills.indexView.*`（18）key，locale zh/en 各 370 keys。
+
+### 测试与静态检查
+
+- `npm test`：**252/252**（新增 `test/plugin-index.test.mjs` 9、`test/skill-hub.test.mjs` 10、http-api T20/T21、client 29）
+- `npm run check:client`：**18/18**，locale 370 keys，旧 `settings.section`/`plugins.tab` 禁止
+- `npm run e2e:skills` 32/32；`npm run e2e:plugin-admin` 21/21；`npm run e2e:commands` 10/10；`npm run e2e:agent-layer` 7/7
+- `node --check`：lib、client、scripts 全部通过
+
+### 修复记录
+
+- dispatch 表漏挂 5 条新路由 → 补齐并加 T20/T21。
+- 插件安装结果含 `undefined` 字段 → 经 `toLosslessJson` 归一化。
+- 技能索引测试修正：trash 假实现需真正移动目录；size 断言按实际字节数。
+
+### 未验证（需重启后真实环境）
+
+侧栏图标渲染与主面板布局、真实认证后的路由 200、真实插件市场索引源与真实安装（restart-required/pending-builds 路径）、真实 SkillHub 网络下载、真实技能落盘与 GUI 刷新、断网降级表现。
+
+### 回滚
+
+`plugin_manager set_bundle dsh-skill-desc-zh enabled=false`；或 `git revert` 对应提交；索引安装失败不回滚已装插件/技能，覆盖安装前旧目录在废纸篓。

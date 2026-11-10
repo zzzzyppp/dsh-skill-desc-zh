@@ -38,7 +38,7 @@ check('package name', () => {
 })
 
 check('package version', () => {
-  if (pkg.version !== '0.7.1') throw new Error(`expected 0.7.1, got ${pkg.version}`)
+  if (pkg.version !== '0.8.0') throw new Error(`expected 0.8.0, got ${pkg.version}`)
   return pkg.version
 })
 
@@ -84,17 +84,19 @@ check('require allowlist', () => {
   return requests.join(', ') || 'none'
 })
 
-check('plugins tab injection', () => {
-  const injections = client.match(/ctx\.slots\.inject\('plugins\.tab'/gu) || []
-  if (injections.length !== 1) throw new Error(`expected exactly one plugins.tab injection, got ${injections.length}`)
-  if (client.includes('settings.section')) throw new Error('settings.section residual must be removed')
-  if (!/name:\s*'plugins\.tab'/u.test(client)) throw new Error('plugins.tab slot name missing')
-  if (!/id:\s*'skill-desc-zh'/u.test(client)) throw new Error('plugins.tab slot id missing')
-  if (!/order:\s*20/u.test(client)) throw new Error('plugins.tab order must be 20')
+check('sidebar panel + main entry', () => {
+  if (client.includes('settings.section') || client.includes('plugins.tab')) throw new Error('legacy settings.section/plugins.tab must be removed')
+  const mains = client.match(/ctx\.slots\.inject\('main'/gu) || []
+  const panels = client.match(/ctx\.slots\.inject\('sidebar\.panellist'/gu) || []
+  if (mains.length !== 1) throw new Error(`expected one main injection, got ${mains.length}`)
+  if (panels.length !== 1) throw new Error(`expected one sidebar.panellist injection, got ${panels.length}`)
+  if (!/name:\s*'main'[\s\S]{0,80}key:\s*'skill-desc-zh'/u.test(client)) throw new Error('main slot key missing')
+  if (!/name:\s*'sidebar\.panellist'[\s\S]{0,120}id:\s*'skill-desc-zh'/u.test(client)) throw new Error('panellist id missing')
+  if (!/order:\s*-10/u.test(client)) throw new Error('panellist order must be -10 (above plugins)')
   if (!/label:\s*function\s*\(\s*\)\s*\{\s*return\s+t\('nav'\)/u.test(client)) throw new Error('locale-aware label thunk missing')
-  if (client.includes('PAGE_ORDER') || client.includes('BetterSkillIcon')) throw new Error('PAGE_ORDER/BetterSkillIcon residual must be removed')
-  if (client.includes("id: 'plugin-admin'") || client.includes("id: 'skill-admin'")) throw new Error('extra admin slots must be removed')
-  return 'plugins.tab id=skill-desc-zh order=20 (single)'
+  if (!/sdzh-panel-root/u.test(client) || !/sdzh-panel-icon/u.test(client)) throw new Error('panel root/icon styles missing')
+  if (client.includes('PAGE_ORDER') || client.includes('BetterSkillIcon')) throw new Error('legacy PAGE_ORDER/BetterSkillIcon must be removed')
+  return 'main key=skill-desc-zh + sidebar.panellist id=skill-desc-zh order=-10'
 })
 
 check('tabs', () => {
@@ -110,7 +112,7 @@ check('tabs', () => {
 })
 
 check('plugin index view', () => {
-  for (const marker of ['PluginIndexView', 'PluginIndexRow', 'INDEX_I18N', 'listIndexes', 'pluginMarket', 'plugin-market/changed', 'plugin-manager/changed', 'connection/reset', "role: 'group'", 'aria-pressed']) {
+  for (const marker of ['PluginIndexView', 'PluginIndexRow', 'INDEX_I18N', 'listIndexes', 'pluginMarket', 'plugin-market/changed', 'plugin-manager/changed', 'connection/reset', 'installMarketPlugin', 'onInstall', "role: 'group'", 'aria-pressed']) {
     if (!client.includes(marker)) throw new Error(`plugin index marker missing: ${marker}`)
   }
   if (!/indexSearchQuery/u.test(client) || !/fetchedAt/u.test(client)) throw new Error('index search query/fetchedAt missing')
@@ -119,7 +121,7 @@ check('plugin index view', () => {
   if (client.includes('dangerouslySetInnerHTML')) throw new Error('index/third-party text must not use dangerouslySetInnerHTML')
   if (!/sdzh-index-skeleton/u.test(client)) throw new Error('index skeleton missing')
   if (!/sdzh-index-degraded|plugins\.index\.unavailable/u.test(client)) throw new Error('index degradation message missing')
-  return 'PluginIndexView + remote.pluginMarket + events + read-only UI'
+  return 'PluginIndexView + install + remote.pluginMarket + events'
 })
 
 check('skill admin api', () => {
@@ -130,18 +132,18 @@ check('skill admin api', () => {
 })
 
 check('page version', () => {
-  if (!/PAGE_VERSION\s*=\s*'0\.7\.1'/u.test(client)) throw new Error('PAGE_VERSION must be 0.7.1')
-  return '0.7.1'
+  if (!/PAGE_VERSION\s*=\s*'0\.8\.0'/u.test(client)) throw new Error('PAGE_VERSION must be 0.8.0')
+  return '0.8.0'
 })
 
 check('feature pages and APIs', () => {
-  for (const page of ['SettingsPage', 'PluginAdminPage', 'SkillAdminPage', 'BetterSkillPage']) {
+  for (const page of ['SettingsPage', 'PluginAdminPage', 'SkillAdminPage', 'SkillIndexView', 'BetterSkillPage']) {
     if (!client.includes('function ' + page)) throw new Error(`page missing: ${page}`)
   }
-  for (const api of ['listPlugins', 'checkPlugins', 'updatePlugin', 'listSkills', 'getSkillDetail', 'skillAction']) {
+  for (const api of ['listPlugins', 'checkPlugins', 'updatePlugin', 'marketSources', 'searchMarket', 'installMarketPlugin', 'listSkills', 'getSkillDetail', 'skillAction', 'searchSkillHub', 'installSkillHub']) {
     if (!client.includes(api + ':')) throw new Error(`api method missing: ${api}`)
   }
-  return '4 pages + 6 APIs'
+  return '5 pages + 11 APIs'
 })
 
 
@@ -175,7 +177,10 @@ check('locale key parity', () => {
     'plugins.index.status.not-installed', 'plugins.index.status.installed',
     'plugins.index.status.update-available', 'plugins.index.compat.incompatible',
     'plugins.index.detail.versions', 'plugins.index.error.sources', 'plugins.index.error.search',
-    'plugins.index.unavailable', 'plugins.index.detail.installHint'
+    'plugins.index.unavailable', 'plugins.index.detail.installHint',
+    'plugins.index.install', 'plugins.index.install.done',
+    'skills.indexView.local', 'skills.indexView.index', 'skills.index.title',
+    'skills.index.search', 'skills.index.install', 'skills.index.install.force'
   )
   const inlineSkills = [...client.matchAll(/\['(skills\.[^']+)'/gu)].map((match) => match[1])
   if (inlineSkills.length < 80) throw new Error(`expected >=80 inline skill keys, got ${inlineSkills.length}`)
@@ -191,7 +196,7 @@ check('locale key parity', () => {
   if (absentIndex.length) throw new Error(`inline index keys missing from locale: ${absentIndex.slice(0, 8).join(', ')}`)
   const indexTotal = zhKeys.filter((key) => key.startsWith('plugins.index.')).length
   if (indexTotal !== inlineIndex.length) throw new Error(`index locale keys mismatch: inline ${inlineIndex.length}, locale ${indexTotal}`)
-  if (zhKeys.length !== 345) throw new Error(`expected exactly 345 locale keys, got ${zhKeys.length}`)
+  if (zhKeys.length !== 370) throw new Error(`expected exactly 370 locale keys, got ${zhKeys.length}`)
   return `${zhKeys.length} keys (${inlineSkills.length} skill + ${inlineIndex.length} index keys)`
 })
 
